@@ -1,0 +1,433 @@
+                    Size = UDim2.new(1,-20,1,0),
+                    Font = Enum.Font.GothamMedium,
+                    Text = tostring(optionValue),
+                    TextColor3 = Theme.TextSoft,
+                    TextSize = 10,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    ZIndex = 25,
+                    Parent = option,
+                })
+
+                optionRows[tostring(optionValue)] = {
+                    Row = option,
+                    Left = left,
+                    Label = label,
+                }
+
+                option.MouseButton1Click:Connect(function()
+                    item:Set(optionValue,false)
+                    item:Close()
+                end)
+            end
+
+            refreshVisuals()
+        end
+
+        function item:Open()
+            if open or not enabled then
+                return
+            end
+
+            closeOtherPicker(item)
+            Window._OpenPicker = item
+            open = true
+            optionsHolder.Visible = true
+            arrow.Text = "^"
+
+            local visibleRows = math.clamp(#values,1,6)
+            local listHeight = visibleRows * 34 + 12
+            optionsHolder.Size = UDim2.new(1,-20,0,listHeight)
+
+            Tween(row,.17,{
+                Size = UDim2.new(1,0,0,closedHeight + listHeight + 10)
+            })
+            Tween(selectorStroke,.13,{Color=accent,Transparency=.40})
+        end
+
+        function item:Close()
+            if not open then
+                return
+            end
+
+            open = false
+            if Window._OpenPicker == item then
+                Window._OpenPicker = nil
+            end
+
+            arrow.Text = "v"
+            Tween(row,.15,{Size=UDim2.new(1,0,0,closedHeight)})
+            Tween(selectorStroke,.13,{Color=Theme.StrokeSoft,Transparency=.72})
+
+            task.delay(.15,function()
+                if not open and optionsHolder.Parent then
+                    optionsHolder.Visible = false
+                end
+            end)
+        end
+
+        function item:Set(newValue,silent)
+            local valid = false
+
+            for _, optionValue in ipairs(values) do
+                if tostring(optionValue) == tostring(newValue) then
+                    newValue = optionValue
+                    valid = true
+                    break
+                end
+            end
+
+            if not valid then
+                return false
+            end
+
+            value = newValue
+            refreshVisuals()
+
+            if not silent and callback then
+                task.spawn(callback,value)
+            end
+
+            return true
+        end
+
+        function item:Get()
+            return value
+        end
+
+        function item:SetEnabled(newEnabled)
+            enabled = newEnabled ~= false
+            selector.BackgroundTransparency = enabled and .47 or .78
+            valueLabel.TextTransparency = enabled and 0 or .50
+            if not enabled then
+                item:Close()
+            end
+        end
+
+        function item:SetOptions(newValues,preserve)
+            local oldValue = value
+            values = copyArray(newValues)
+
+            if preserve then
+                local found = false
+                for _, optionValue in ipairs(values) do
+                    if tostring(optionValue) == tostring(oldValue) then
+                        value = optionValue
+                        found = true
+                        break
+                    end
+                end
+
+                if not found then
+                    value = values[1]
+                end
+            else
+                value = values[1]
+            end
+
+            buildOptions()
+            refreshVisuals()
+        end
+
+        Overlay(selector,function()
+            if open then
+                item:Close()
+            else
+                item:Open()
+            end
+        end,30)
+
+        buildOptions()
+        Window.Items[key] = item
+        return item
+    end
+
+    function Window:MultiSelect(parent, key, title, description, values, defaults, callback, options)
+        options = options or {}
+        values = copyArray(values)
+
+        local closedHeight = 62
+        local row = baseRow(parent,closedHeight)
+        row.ClipsDescendants = true
+
+        local accent = resolveAccent(options.Accent or "cyan")
+        local selected = makeSet(defaults)
+        local open = false
+        local enabled = options.Enabled ~= false
+        local item = {}
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,7),
+            Size = UDim2.new(.46,-18,0,20),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = Theme.Text,
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,28),
+            Size = UDim2.new(.46,-18,0,18),
+            Font = Enum.Font.Gotham,
+            Text = tostring(description or ""),
+            TextColor3 = Theme.TextDim,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        local selector = New("Frame", {
+            AnchorPoint = Vector2.new(1,0),
+            Position = UDim2.new(1,-12,0,12),
+            Size = UDim2.new(.50,0,0,36),
+            BackgroundColor3 = Theme.Panel3,
+            BackgroundTransparency = .47,
+            BorderSizePixel = 0,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(selector,9)
+        local selectorStroke = Stroke(selector,Theme.StrokeSoft,.72,1)
+
+        local summary = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(11,0),
+            Size = UDim2.new(1,-38,1,0),
+            Font = Enum.Font.GothamMedium,
+            Text = "",
+            TextColor3 = accent,
+            TextSize = 10,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 19,
+            Parent = selector,
+        })
+
+        local arrow = New("TextLabel", {
+            BackgroundTransparency = 1,
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,-8,.5,0),
+            Size = UDim2.fromOffset(22,22),
+            Font = Enum.Font.GothamBold,
+            Text = "v",
+            TextColor3 = Theme.TextSoft,
+            TextSize = 10,
+            ZIndex = 19,
+            Parent = selector,
+        })
+
+        local menu = New("Frame", {
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .16,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(10,closedHeight + 2),
+            Size = UDim2.new(1,-20,0,0),
+            Visible = false,
+            ClipsDescendants = true,
+            ZIndex = 22,
+            Parent = row,
+        })
+        Round(menu,10)
+        Stroke(menu,accent,.62,1)
+
+        local toolbar = New("Frame", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(7,7),
+            Size = UDim2.new(1,-14,0,30),
+            ZIndex = 23,
+            Parent = menu,
+        })
+
+        local search = New("TextBox", {
+            BackgroundColor3 = Theme.Panel3,
+            BackgroundTransparency = .48,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(0,0),
+            Size = UDim2.new(1,-104,0,30),
+            Font = Enum.Font.Gotham,
+            PlaceholderText = options.SearchPlaceholder or "Search",
+            PlaceholderColor3 = Theme.TextDim,
+            Text = "",
+            TextColor3 = Theme.Text,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ClearTextOnFocus = false,
+            ZIndex = 24,
+            Parent = toolbar,
+        })
+        Round(search,8)
+        Stroke(search,Theme.StrokeSoft,.78,1)
+
+        New("UIPadding", {
+            PaddingLeft = UDim.new(0,9),
+            PaddingRight = UDim.new(0,9),
+            Parent = search,
+        })
+
+        local allButton = New("TextButton", {
+            AutoButtonColor = false,
+            BackgroundColor3 = accent,
+            BackgroundTransparency = .85,
+            BorderSizePixel = 0,
+            Position = UDim2.new(1,-98,0,0),
+            Size = UDim2.fromOffset(45,30),
+            Font = Enum.Font.GothamMedium,
+            Text = "ALL",
+            TextColor3 = accent,
+            TextSize = 8,
+            ZIndex = 24,
+            Parent = toolbar,
+        })
+        Round(allButton,8)
+        Stroke(allButton,accent,.62,1)
+
+        local clearButton = New("TextButton", {
+            AutoButtonColor = false,
+            BackgroundColor3 = Theme.Panel3,
+            BackgroundTransparency = .52,
+            BorderSizePixel = 0,
+            Position = UDim2.new(1,-48,0,0),
+            Size = UDim2.fromOffset(48,30),
+            Font = Enum.Font.GothamMedium,
+            Text = "CLEAR",
+            TextColor3 = Theme.TextSoft,
+            TextSize = 8,
+            ZIndex = 24,
+            Parent = toolbar,
+        })
+        Round(clearButton,8)
+        Stroke(clearButton,Theme.StrokeSoft,.72,1)
+
+        local list = New("ScrollingFrame", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(7,43),
+            Size = UDim2.new(1,-14,1,-50),
+            CanvasSize = UDim2.new(),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = accent,
+            ZIndex = 23,
+            Parent = menu,
+        })
+
+        New("UIListLayout", {
+            Padding = UDim.new(0,4),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = list,
+        })
+
+        local optionRows = {}
+        item._Selector = selector
+        item._Menu = menu
+
+        local function emit()
+            summary.Text = summarizeSelection(values,selected,options)
+
+            if callback then
+                task.spawn(
+                    callback,
+                    selectedList(values,selected),
+                    selected
+                )
+            end
+        end
+
+        local function refreshSummary()
+            summary.Text = summarizeSelection(values,selected,options)
+        end
+
+        local function refreshOptions()
+            for optionValue, data in pairs(optionRows) do
+                local on = selected[tostring(optionValue)] == true
+
+                Tween(data.Row,.10,{
+                    BackgroundTransparency = on and .52 or .87,
+                })
+
+                Tween(data.Left,.10,{
+                    BackgroundTransparency = on and 0 or 1,
+                })
+
+                data.Label.TextColor3 = on and Theme.Text or Theme.TextSoft
+                data.State.Text = on and "ON" or ""
+                data.State.TextColor3 = accent
+            end
+        end
+
+        local function rebuild()
+            for _, child in ipairs(list:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+
+            table.clear(optionRows)
+
+            for index, optionValue in ipairs(values) do
+                local option = New("TextButton", {
+                    AutoButtonColor = false,
+                    BackgroundColor3 = Theme.Panel3,
+                    BackgroundTransparency = .87,
+                    BorderSizePixel = 0,
+                    Text = "",
+                    Size = UDim2.new(1,-3,0,31),
+                    LayoutOrder = index,
+                    ZIndex = 24,
+                    Parent = list,
+                })
+                Round(option,8)
+
+                local left = New("Frame", {
+                    BackgroundColor3 = accent,
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    Position = UDim2.fromOffset(0,5),
+                    Size = UDim2.fromOffset(2,21),
+                    ZIndex = 25,
+                    Parent = option,
+                })
+                Round(left,999)
+
+                local label = New("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.fromOffset(10,0),
+                    Size = UDim2.new(1,-55,1,0),
+                    Font = Enum.Font.GothamMedium,
+                    Text = tostring(optionValue),
+                    TextColor3 = Theme.TextSoft,
+                    TextSize = 10,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextTruncate = Enum.TextTruncate.AtEnd,
+                    ZIndex = 25,
+                    Parent = option,
+                })
+
+                local state = New("TextLabel", {
+                    BackgroundTransparency = 1,
+                    AnchorPoint = Vector2.new(1,0),
+                    Position = UDim2.new(1,-10,0,0),
+                    Size = UDim2.fromOffset(34,31),
+                    Font = Enum.Font.GothamBold,
+                    Text = "",
+                    TextColor3 = accent,
+                    TextSize = 8,
+                    TextXAlignment = Enum.TextXAlignment.Right,
+                    ZIndex = 25,
+                    Parent = option,
+                })
+
+                optionRows[tostring(optionValue)] = {
+                    Row = option,
+                    Left = left,
+                    Label = label,
+                    State = state,
+                }
+
+                option.MouseButton1Click:Connect(function()

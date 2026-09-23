@@ -1,0 +1,150 @@
+-- SERENITY HUB // OFFICIAL V13 DESKTOP RENDERER // ARCHITECTURE V3
+-- Current Serenity V11 design preserved, with only shared/global improvements:
+--   1) automatic current-game thumbnail card
+--   2) automatic player avatar card
+--   3) topbar DisplayName + @Username profile chip
+--   4) configured Serenity Discord invite + reusable copy/community card
+--   5) existing V11 UI API preserved for current/future game modules
+--
+-- PREVIEW ONLY: this file is not published to GitHub by this script.
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local Library = {}
+
+Library.Version = "13.4-desktop-v3-search"
+Library.APIVersion = 3
+Library.RendererKind = "Desktop"
+Library.DiscordInvite = "https://discord.gg/ccsvkN7Pp"
+
+
+-- Official lifecycle sink. Global UserInputService connections must be
+-- disconnected when Serenity is re-executed/closed.
+local function Track(connection)
+    if connection and Library._ConnectionSink then
+        table.insert(Library._ConnectionSink, connection)
+    end
+    return connection
+end
+
+local Theme = {
+    BG = Color3.fromRGB(12,15,19),
+    BG2 = Color3.fromRGB(17,21,26),
+    Sidebar = Color3.fromRGB(20,25,31),
+    Panel = Color3.fromRGB(25,30,37),
+    Panel2 = Color3.fromRGB(31,37,45),
+    Panel3 = Color3.fromRGB(37,44,53),
+    Hover = Color3.fromRGB(44,52,62),
+    Stroke = Color3.fromRGB(60,70,82),
+    StrokeSoft = Color3.fromRGB(46,55,65),
+    Text = Color3.fromRGB(244,247,250),
+    TextSoft = Color3.fromRGB(201,209,218),
+    TextDim = Color3.fromRGB(145,156,168),
+    Icon = Color3.fromRGB(188,198,207),
+    Cyan = Color3.fromRGB(31,210,234),
+    CyanDark = Color3.fromRGB(20,158,198),
+    Mint = Color3.fromRGB(58,222,174),
+    Lavender = Color3.fromRGB(157,138,255),
+    Warning = Color3.fromRGB(245,203,94),
+    Danger = Color3.fromRGB(235,105,120),
+    Track = Color3.fromRGB(55,64,75),
+    White = Color3.fromRGB(250,252,253),
+}
+
+local Icons = {
+    Dashboard = "rbxassetid://10723424646",
+    Farm = "rbxassetid://10723425539",
+    Upgrades = "rbxassetid://10734963191",
+    Quests = "rbxassetid://10709782582",
+    Others = "rbxassetid://10734950309",
+    Settings = "rbxassetid://14007344336",
+    search = "rbxassetid://10734943674",
+    minimize = "rbxassetid://10734895698",
+    close = "rbxassetid://10709798174",
+    chevron = "rbxassetid://10709790948",
+}
+
+local function New(className, props)
+    local object = Instance.new(className)
+    for key, value in pairs(props or {}) do
+        if key ~= "Parent" then
+            object[key] = value
+        end
+    end
+    object.Parent = props and props.Parent or nil
+    return object
+end
+
+local function Round(parent, radius)
+    return New("UICorner", {
+        CornerRadius = UDim.new(0, radius or 12),
+        Parent = parent,
+    })
+end
+
+local function Stroke(parent, color, transparency, thickness)
+    return New("UIStroke", {
+        Color = color or Theme.Stroke,
+        Transparency = transparency == nil and .65 or transparency,
+        Thickness = thickness or 1,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = parent,
+    })
+end
+
+local function Tween(object, duration, props, style, direction)
+    local tween = TweenService:Create(
+        object,
+        TweenInfo.new(
+            duration or .16,
+            style or Enum.EasingStyle.Quint,
+            direction or Enum.EasingDirection.Out
+        ),
+        props
+    )
+    tween:Play()
+    return tween
+end
+
+local function Glass(parent, topTransparency, bottomTransparency)
+    return New("UIGradient", {
+        Rotation = 90,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(44,52,62)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(19,24,30)),
+        }),
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, topTransparency or .47),
+            NumberSequenceKeypoint.new(1, bottomTransparency or .73),
+        }),
+        Parent = parent,
+    })
+end
+
+local function Icon(parent, name, props)
+    props = props or {}
+    return New("ImageLabel", {
+        BackgroundTransparency = 1,
+        Image = Icons[name] or name or "",
+        ImageColor3 = props.Color or Theme.Icon,
+        ImageTransparency = props.Transparency or 0,
+        Position = props.Position or UDim2.new(),
+        Size = props.Size or UDim2.fromOffset(16,16),
+        AnchorPoint = props.AnchorPoint or Vector2.zero,
+        ZIndex = props.ZIndex or 1,
+        Parent = parent,
+    })
+end
+
+local function Overlay(parent, callback, z)
+    local button = New("TextButton", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(1,1),
+        Text = "",
+        AutoButtonColor = false,

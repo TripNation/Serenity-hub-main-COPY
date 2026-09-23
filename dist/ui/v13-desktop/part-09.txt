@@ -1,0 +1,254 @@
+        AnchorPoint=Vector2.new(.5,.5),
+        Position=UDim2.fromScale(.5,.5),
+        Size=UDim2.fromOffset(42,42),
+        BackgroundTransparency=1,
+        ScaleType=Enum.ScaleType.Fit,
+        Image=logoId,
+        ImageColor3=Theme.White,
+        ZIndex=206,
+        Parent=launcher
+    })
+
+    local launcherHit = Overlay(launcher,nil,207)
+    makeDraggable(launcherHit,launcher)
+
+    launcherHit.MouseEnter:Connect(function()
+        Tween(launcher,.14,{
+            BackgroundTransparency=.04,
+            Size=UDim2.fromOffset(68,68)
+        })
+    end)
+
+    launcherHit.MouseLeave:Connect(function()
+        Tween(launcher,.14,{
+            BackgroundTransparency=.14,
+            Size=UDim2.fromOffset(64,64)
+        })
+    end)
+
+    -- RC1.2 PERMANENT SERENITY ORB
+    -- The orb is always visible. It toggles the main window rather than
+    -- acting as a restore-only launcher.
+    local minimized = false
+    local launcherPointerDown = false
+    local launcherDragStart = nil
+    local launcherDragged = false
+
+    launcherHit.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            launcherPointerDown = true
+            launcherDragged = false
+            launcherDragStart = input.Position
+        end
+    end)
+
+    Track(UserInputService.InputChanged:Connect(function(input)
+        if not launcherPointerDown or not launcherDragStart then
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+            if (input.Position - launcherDragStart).Magnitude >= 7 then
+                launcherDragged = true
+            end
+        end
+    end))
+
+    Track(UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            launcherPointerDown = false
+            launcherDragStart = nil
+        end
+    end))
+
+    function Window:IsOpen()
+        return main.Visible and not minimized
+    end
+
+    function Window:Minimize()
+        if Window._OpenPicker and type(Window._OpenPicker.Close) == "function" then
+            pcall(function() Window._OpenPicker:Close() end)
+        end
+
+        if minimized or not main.Visible then
+            minimized = true
+            main.Visible = false
+            launcher.Visible = true
+            return
+        end
+
+        minimized = true
+        launcher.Visible = true
+
+        Tween(
+            main,
+            .18,
+            {
+                Size=UDim2.fromOffset(width*.92,height*.92),
+                BackgroundTransparency=.55
+            }
+        ).Completed:Wait()
+
+        main.Visible = false
+    end
+
+    function Window:Restore()
+        if main.Visible and not minimized then
+            launcher.Visible = true
+            return
+        end
+
+        minimized = false
+        launcher.Visible = true
+        main.Visible = true
+        main.Size = UDim2.fromOffset(width*.92,height*.92)
+
+        Tween(
+            main,
+            .20,
+            {
+                Size=UDim2.fromOffset(width,height),
+                BackgroundTransparency=.14
+            }
+        )
+    end
+
+    function Window:ToggleVisibility()
+        if Window:IsOpen() then
+            Window:Minimize()
+        else
+            Window:Restore()
+        end
+    end
+
+    launcherHit.MouseButton1Click:Connect(function()
+        -- Dragging the orb should reposition it, not toggle Serenity.
+        if launcherDragged then
+            launcherDragged = false
+            return
+        end
+
+        Window:ToggleVisibility()
+    end)
+
+    function Window:Close()
+        if Window.Destroyed then
+            return
+        end
+        Window.Destroyed = true
+
+        if Window._OpenPicker and type(Window._OpenPicker.Close) == "function" then
+            pcall(function() Window._OpenPicker:Close() end)
+        end
+
+        for _, connection in ipairs(Window.Connections) do
+            pcall(function() connection:Disconnect() end)
+        end
+        table.clear(Window.Connections)
+
+        for i = #Window.Cleanups, 1, -1 do
+            pcall(Window.Cleanups[i])
+        end
+        table.clear(Window.Cleanups)
+
+        if Library._ConnectionSink == Window.Connections then
+            Library._ConnectionSink = nil
+        end
+
+        if gui then
+            gui:Destroy()
+        end
+    end
+
+    Window.Destroy = Window.Close
+
+    topButton("search",showTopProfile and -310 or -100,function()
+        Window:ToggleSearch()
+    end)
+
+    topButton("close",-16,function()
+        Window:Close()
+    end)
+
+    topButton("minimize",-58,function()
+        Window:Minimize()
+    end)
+
+    makeDraggable(topbar,main)
+
+    function Window:Open()
+        minimized = false
+        launcher.Visible = true
+        main.Visible = true
+        main.Size = UDim2.fromOffset(94,60)
+        main.BackgroundTransparency = .60
+
+        Tween(
+            main,
+            .20,
+            {
+                Size=UDim2.fromOffset(width,60),
+                BackgroundTransparency=.24
+            }
+        ).Completed:Wait()
+
+        Tween(
+            main,
+            .24,
+            {
+                Size=UDim2.fromOffset(width,height),
+                BackgroundTransparency=.14
+            }
+        )
+    end
+
+
+    --------------------------------------------------------------------
+    -- OFFICIAL PICKER DISMISSAL
+    -- One picker at a time already exists in V13. RC1 adds the same
+    -- outside-click/tap behavior as V14 mobile for contract parity.
+    --------------------------------------------------------------------
+    local function pointInside(guiObject, position)
+        if not guiObject or not guiObject.Parent or not guiObject.Visible then
+            return false
+        end
+        local p = guiObject.AbsolutePosition
+        local s = guiObject.AbsoluteSize
+        return position.X >= p.X and position.X <= p.X + s.X
+           and position.Y >= p.Y and position.Y <= p.Y + s.Y
+    end
+
+    Track(UserInputService.InputBegan:Connect(function(input)
+        local active = Window._OpenPicker
+        if not active then
+            return
+        end
+
+        if input.KeyCode == Enum.KeyCode.Escape then
+            pcall(function() active:Close() end)
+            return
+        end
+
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1
+        and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+
+        if pointInside(active._Selector, input.Position)
+        or pointInside(active._Menu, input.Position) then
+            return
+        end
+
+        pcall(function() active:Close() end)
+    end))
+
+
+    return Window
+end
+
+
+
+return Library

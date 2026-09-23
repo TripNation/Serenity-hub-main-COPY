@@ -1,0 +1,412 @@
+        local height = description and description ~= "" and 60 or 48
+        local row = baseRow(parent,height)
+        local accent = resolveAccent(options.Accent or (options.Danger and "danger" or "cyan"))
+
+        local titleLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12, description and 7 or 0),
+            Size = UDim2.new(1,-88,0,description and 22 or height),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = options.Danger and Theme.Danger or Theme.Text,
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        if description and description ~= "" then
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(12,30),
+                Size = UDim2.new(1,-88,0,18),
+                Font = Enum.Font.Gotham,
+                Text = tostring(description),
+                TextColor3 = Theme.TextDim,
+                TextSize = 9,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ZIndex = 18,
+                Parent = row,
+            })
+        end
+
+        local actionPill = New("Frame", {
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,-12,.5,0),
+            Size = UDim2.fromOffset(options.PillWidth or 62,28),
+            BackgroundColor3 = accent,
+            BackgroundTransparency = .88,
+            BorderSizePixel = 0,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(actionPill,9)
+        Stroke(actionPill,accent,.55,1)
+
+        local actionText = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1,1),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(options.ButtonText or "RUN"),
+            TextColor3 = accent,
+            TextSize = 9,
+            ZIndex = 19,
+            Parent = actionPill,
+        })
+
+        local enabled = options.Enabled ~= false
+        local awaitingConfirmation = false
+        local confirmationSerial = 0
+        local item = {}
+
+        local function renderEnabled()
+            row.BackgroundTransparency = enabled and .78 or .90
+            titleLabel.TextTransparency = enabled and 0 or .48
+            actionText.TextTransparency = enabled and 0 or .55
+            actionPill.BackgroundTransparency = enabled and .88 or .95
+        end
+
+        function item:SetEnabled(value)
+            enabled = value ~= false
+            renderEnabled()
+        end
+
+        function item:IsEnabled()
+            return enabled
+        end
+
+        function item:SetButtonText(value)
+            actionText.Text = tostring(value or "")
+        end
+
+        function item:Trigger()
+            if not enabled then
+                return false
+            end
+
+            if options.Confirm then
+                if not awaitingConfirmation then
+                    awaitingConfirmation = true
+                    confirmationSerial += 1
+                    local serial = confirmationSerial
+
+                    actionText.Text = options.ConfirmText or "AGAIN"
+                    Tween(actionPill,.12,{
+                        BackgroundColor3 = options.Danger and Theme.Danger or Theme.Warning
+                    })
+
+                    task.delay(options.ConfirmTimeout or 2.2,function()
+                        if awaitingConfirmation and confirmationSerial == serial and actionText.Parent then
+                            awaitingConfirmation = false
+                            actionText.Text = tostring(options.ButtonText or "RUN")
+                            Tween(actionPill,.12,{BackgroundColor3=accent})
+                        end
+                    end)
+
+                    return false
+                end
+
+                awaitingConfirmation = false
+                confirmationSerial += 1
+                actionText.Text = tostring(options.ButtonText or "RUN")
+                Tween(actionPill,.12,{BackgroundColor3=accent})
+            end
+
+            if callback then
+                task.spawn(callback)
+            end
+
+            return true
+        end
+
+        local hit = Overlay(row,function()
+            item:Trigger()
+        end)
+
+        hit.MouseEnter:Connect(function()
+            if enabled then
+                Tween(actionPill,.12,{BackgroundTransparency=.72})
+            end
+        end)
+
+        hit.MouseLeave:Connect(function()
+            Tween(actionPill,.12,{BackgroundTransparency=enabled and .88 or .95})
+        end)
+
+        renderEnabled()
+        return item
+    end
+
+    function Window:Switch(parent, key, title, description, default, callback, options)
+        options = options or {}
+        local row = baseRow(parent,60)
+        local accent = resolveAccent(options.Accent or "cyan")
+
+        local titleLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,7),
+            Size = UDim2.new(1,-78,0,22),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = Theme.Text,
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,29),
+            Size = UDim2.new(1,-78,0,18),
+            Font = Enum.Font.Gotham,
+            Text = tostring(description or ""),
+            TextColor3 = Theme.TextDim,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        local track = New("Frame", {
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,-12,.5,0),
+            Size = UDim2.fromOffset(44,24),
+            BackgroundColor3 = Theme.Track,
+            BackgroundTransparency = .20,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(track,999)
+
+        local knob = New("Frame", {
+            AnchorPoint = Vector2.new(.5,.5),
+            Position = UDim2.new(0,12,.5,0),
+            Size = UDim2.fromOffset(18,18),
+            BackgroundColor3 = Theme.TextDim,
+            ZIndex = 19,
+            Parent = track,
+        })
+        Round(knob,999)
+
+        local state = default == true
+        local enabled = options.Enabled ~= false
+        local item = {}
+
+        local function render()
+            Tween(track,.13,{
+                BackgroundColor3 = state and accent or Theme.Track,
+                BackgroundTransparency = state and .12 or .20,
+            })
+
+            Tween(knob,.13,{
+                Position = state
+                    and UDim2.new(1,-12,.5,0)
+                    or UDim2.new(0,12,.5,0),
+                BackgroundColor3 = state and Theme.White or Theme.TextDim,
+            })
+
+            titleLabel.TextTransparency = enabled and 0 or .50
+            row.BackgroundTransparency = enabled and .78 or .90
+        end
+
+        function item:Set(value,silent)
+            state = value == true
+            render()
+
+            if not silent and callback then
+                task.spawn(callback,state)
+            end
+        end
+
+        function item:Get()
+            return state
+        end
+
+        function item:SetEnabled(value)
+            enabled = value ~= false
+            render()
+        end
+
+        function item:IsEnabled()
+            return enabled
+        end
+
+        Overlay(row,function()
+            if enabled then
+                item:Set(not state,false)
+            end
+        end)
+
+        item:Set(state,true)
+        Window.Items[key] = item
+        return item
+    end
+
+    function Window:Select(parent, key, title, description, values, default, callback, options)
+        options = options or {}
+        values = copyArray(values)
+
+        local closedHeight = 62
+        local row = baseRow(parent,closedHeight)
+        row.ClipsDescendants = true
+
+        local accent = resolveAccent(options.Accent or "cyan")
+        local value = default or values[1]
+        local open = false
+        local enabled = options.Enabled ~= false
+        local item = {}
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,7),
+            Size = UDim2.new(.46,-18,0,20),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = Theme.Text,
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,28),
+            Size = UDim2.new(.46,-18,0,18),
+            Font = Enum.Font.Gotham,
+            Text = tostring(description or ""),
+            TextColor3 = Theme.TextDim,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        local selector = New("Frame", {
+            AnchorPoint = Vector2.new(1,0),
+            Position = UDim2.new(1,-12,0,12),
+            Size = UDim2.new(.50,0,0,36),
+            BackgroundColor3 = Theme.Panel3,
+            BackgroundTransparency = .47,
+            BorderSizePixel = 0,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(selector,9)
+        local selectorStroke = Stroke(selector,Theme.StrokeSoft,.72,1)
+
+        local valueLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(11,0),
+            Size = UDim2.new(1,-38,1,0),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(value or options.Placeholder or "Select"),
+            TextColor3 = accent,
+            TextSize = 10,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 19,
+            Parent = selector,
+        })
+
+        local arrow = New("TextLabel", {
+            BackgroundTransparency = 1,
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,-8,.5,0),
+            Size = UDim2.fromOffset(22,22),
+            Font = Enum.Font.GothamBold,
+            Text = "v",
+            TextColor3 = Theme.TextSoft,
+            TextSize = 10,
+            ZIndex = 19,
+            Parent = selector,
+        })
+
+        local optionsHolder = New("Frame", {
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .20,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(10,closedHeight + 2),
+            Size = UDim2.new(1,-20,0,0),
+            Visible = false,
+            ClipsDescendants = true,
+            ZIndex = 22,
+            Parent = row,
+        })
+        Round(optionsHolder,10)
+        Stroke(optionsHolder,accent,.68,1)
+
+        local list = New("ScrollingFrame", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(6,6),
+            Size = UDim2.new(1,-12,1,-12),
+            CanvasSize = UDim2.new(),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = accent,
+            ZIndex = 23,
+            Parent = optionsHolder,
+        })
+
+        New("UIListLayout", {
+            Padding = UDim.new(0,4),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = list,
+        })
+
+        local optionRows = {}
+        item._Selector = selector
+        item._Menu = optionsHolder
+
+        local function refreshVisuals()
+            valueLabel.Text = tostring(value or options.Placeholder or "Select")
+
+            for optionValue, data in pairs(optionRows) do
+                local selected = tostring(value) == tostring(optionValue)
+                data.Row.BackgroundTransparency = selected and .52 or .86
+                data.Left.BackgroundTransparency = selected and 0 or 1
+                data.Label.TextColor3 = selected and Theme.Text or Theme.TextSoft
+            end
+        end
+
+        local function buildOptions()
+            for _, child in ipairs(list:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            table.clear(optionRows)
+
+            for index, optionValue in ipairs(values) do
+                local option = New("TextButton", {
+                    AutoButtonColor = false,
+                    BackgroundColor3 = Theme.Panel3,
+                    BackgroundTransparency = .86,
+                    BorderSizePixel = 0,
+                    Text = "",
+                    Size = UDim2.new(1,-3,0,30),
+                    LayoutOrder = index,
+                    ZIndex = 24,
+                    Parent = list,
+                })
+                Round(option,8)
+
+                local left = New("Frame", {
+                    BackgroundColor3 = accent,
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    Position = UDim2.fromOffset(0,5),
+                    Size = UDim2.fromOffset(2,20),
+                    ZIndex = 25,
+                    Parent = option,
+                })
+                Round(left,999)
+
+                local label = New("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.fromOffset(10,0),

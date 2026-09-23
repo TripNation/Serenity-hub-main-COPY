@@ -1,0 +1,433 @@
+            Label=label
+        }
+
+        if not current then
+            Window:SwitchPage(name)
+        end
+
+        return page
+    end
+
+    function Window:SwitchPage(name)
+        if not pages[name] then
+            return
+        end
+
+        local previous = current
+        current = name
+
+        for pageName, page in pairs(pages) do
+            if pageName == name then
+                page.Visible = true
+
+                if premiumMotion and previous ~= name then
+                    page.GroupTransparency = 1
+                    page.Position = UDim2.fromOffset(8,0)
+
+                    Tween(page,.18,{
+                        GroupTransparency=0,
+                        Position=UDim2.fromOffset(0,0)
+                    })
+                else
+                    page.GroupTransparency = 0
+                    page.Position = UDim2.fromOffset(0,0)
+                end
+            else
+                page.Visible = false
+            end
+        end
+
+        for itemName, item in pairs(navItems) do
+            local selected = itemName == name
+
+            Tween(item.Row,.16,{
+                BackgroundTransparency=selected and .58 or .90
+            })
+
+            Tween(item.Line,.16,{
+                BackgroundTransparency=selected and 0 or 1
+            })
+
+            Tween(item.Icon,.16,{
+                ImageColor3=selected and Theme.Cyan or Theme.Icon
+            })
+
+            Tween(item.Label,.16,{
+                TextColor3=selected and Theme.Text or Theme.TextSoft
+            })
+
+            item.Stroke.Color = selected and Theme.Cyan or Theme.StrokeSoft
+            item.Stroke.Transparency = selected and .55 or 1
+        end
+    end
+
+    function Window:SetSidebar(open)
+        sidebarOpenState = open == true
+        local widthNow = sidebarOpenState and sidebarOpen or sidebarClosed
+
+        Tween(sidebar,.20,{
+            Size=UDim2.new(0,widthNow,1,0)
+        })
+
+        Tween(content,.20,{
+            Position=UDim2.fromOffset(widthNow,0),
+            Size=UDim2.new(1,-widthNow,1,0)
+        })
+
+        sideBrand.Visible = sidebarOpenState
+
+        -- Preserve the current Serenity compact behavior.
+        sideLogo.Visible = sidebarOpenState
+
+        if sidebarOpenState then
+            Tween(collapse,.16,{
+                Position=UDim2.new(1,-8,.5,0)
+            })
+            collapseIcon.Rotation = 90
+            sideHeader.Size = UDim2.new(1,-18,0,60)
+        else
+            Tween(collapse,.16,{
+                Position=UDim2.new(.5,14,.5,0)
+            })
+            collapseIcon.Rotation = -90
+            sideHeader.Size = UDim2.new(1,-18,0,52)
+        end
+
+        for _, item in pairs(navItems) do
+            item.Label.Visible = sidebarOpenState
+            item.Icon.Position = sidebarOpenState
+                and UDim2.fromOffset(16,14)
+                or UDim2.new(.5,-8,.5,-8)
+        end
+    end
+
+    Overlay(collapse,function()
+        Window:SetSidebar(not sidebarOpenState)
+    end)
+
+    -- RC1.1 DESKTOP PAGE LAYOUT
+    --
+    -- RC1 used a UIGridLayout with a fixed 420px cell height. Sections
+    -- themselves could visually grow past 420px, but the grid/canvas still
+    -- reported only the fixed row height. Result: content existed below the
+    -- viewport while the ScrollingFrame believed there was nothing to scroll.
+    --
+    -- RC1.1 uses two independent auto-sized columns and computes the canvas
+    -- from whichever column is taller. This scales safely to large games.
+    local function makePageScroll(page)
+        local scroll = page:FindFirstChild("Scroll")
+        if scroll then
+            local columns = scroll:FindFirstChild("Columns")
+            return scroll,
+                columns and columns:FindFirstChild("LeftColumn"),
+                columns and columns:FindFirstChild("RightColumn")
+        end
+
+        scroll = New("ScrollingFrame", {
+            Name = "Scroll",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.fromScale(1,1),
+            CanvasSize = UDim2.fromOffset(0,0),
+            AutomaticCanvasSize = Enum.AutomaticSize.None,
+            ScrollingDirection = Enum.ScrollingDirection.Y,
+            Active = true,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Theme.Stroke,
+            ZIndex = 14,
+            Parent = page,
+        })
+
+        local columns = New("Frame", {
+            Name = "Columns",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(0,0),
+            Size = UDim2.new(1,-6,0,0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            ZIndex = 14,
+            Parent = scroll,
+        })
+
+        local left = New("Frame", {
+            Name = "LeftColumn",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(0,0),
+            Size = UDim2.new(.5,-6,0,0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            ZIndex = 14,
+            Parent = columns,
+        })
+
+        local right = New("Frame", {
+            Name = "RightColumn",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Position = UDim2.new(.5,6,0,0),
+            Size = UDim2.new(.5,-12,0,0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            ZIndex = 14,
+            Parent = columns,
+        })
+
+        local leftList = New("UIListLayout", {
+            Padding = UDim.new(0,12),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = left,
+        })
+
+        local rightList = New("UIListLayout", {
+            Padding = UDim.new(0,12),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = right,
+        })
+
+        local function updateCanvas()
+            local leftHeight = leftList.AbsoluteContentSize.Y
+            local rightHeight = rightList.AbsoluteContentSize.Y
+            local contentHeight = math.max(leftHeight,rightHeight)
+
+            -- Small bottom breathing room keeps the last control clear of the
+            -- desktop frame edge and scrollbar.
+            scroll.CanvasSize = UDim2.fromOffset(0,math.max(0,contentHeight + 18))
+            columns.Size = UDim2.new(1,-6,0,contentHeight)
+        end
+
+        leftList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+        rightList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+        scroll:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(function()
+            task.defer(updateCanvas)
+        end)
+
+        task.defer(updateCanvas)
+
+        return scroll,left,right
+    end
+
+    function Window:Section(page, title, right)
+        local scroll,leftColumn,rightColumn = makePageScroll(page)
+        local column = right and rightColumn or leftColumn
+
+        local section = New("Frame", {
+            Name = title,
+            LayoutOrder = 1,
+            BackgroundColor3 = Theme.Panel,
+            BackgroundTransparency = .72,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1,0,0,0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            ZIndex = 15,
+            Parent = column,
+        })
+        Round(section,15)
+        Stroke(section,Theme.StrokeSoft,.72,1)
+        Glass(section,.57,.82)
+
+        New("UIPadding", {
+            PaddingTop=UDim.new(0,13),
+            PaddingBottom=UDim.new(0,13),
+            PaddingLeft=UDim.new(0,13),
+            PaddingRight=UDim.new(0,13),
+            Parent=section
+        })
+
+        New("UIListLayout", {
+            Padding=UDim.new(0,9),
+            SortOrder=Enum.SortOrder.LayoutOrder,
+            Parent=section
+        })
+
+        New("TextLabel", {
+            LayoutOrder = 0,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1,0,0,24),
+            Font = Enum.Font.GothamMedium,
+            Text = title,
+            TextColor3 = Theme.Text,
+            TextSize = 15,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 16,
+            Parent = section,
+        })
+
+        return section
+    end
+
+    local controlOrder = 10
+
+    local function baseRow(parent, height)
+        controlOrder += 1
+
+        local row = New("Frame", {
+            LayoutOrder = controlOrder,
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .78,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1,0,0,height or 46),
+            ZIndex = 16,
+            Parent = parent,
+        })
+
+        Round(row,12)
+        local rowStroke = Stroke(row,Theme.StrokeSoft,.82,1)
+        Glass(row,.64,.86)
+
+        -- V12.6: shared, very subtle hover response. Because this is attached
+        -- to the frame itself it does not block buttons/toggles inside cards.
+        row.MouseEnter:Connect(function()
+            Tween(row,.12,{BackgroundTransparency=.70})
+            Tween(rowStroke,.12,{Color=Theme.Cyan,Transparency=.65})
+        end)
+
+        row.MouseLeave:Connect(function()
+            Tween(row,.12,{BackgroundTransparency=.78})
+            Tween(rowStroke,.12,{Color=Theme.StrokeSoft,Transparency=.82})
+        end)
+
+        return row
+    end
+
+    --------------------------------------------------------------------
+    -- NEW V12 SHARED DASHBOARD CARDS
+    -- These are optional helpers. Existing games do not have to use them.
+    --------------------------------------------------------------------
+
+    function Window:GameCard(parent, opts)
+        opts = opts or {}
+
+        local row = baseRow(parent, opts.Height or 132)
+        local color = opts.Accent or Theme.Cyan
+
+        local line = New("Frame", {
+            BackgroundColor3=color,
+            BorderSizePixel=0,
+            Position=UDim2.fromOffset(0,0),
+            Size=UDim2.new(0,3,1,0),
+            ZIndex=17,
+            Parent=row
+        })
+        Round(line,999)
+
+        local imageHolder = New("Frame", {
+            BackgroundColor3=Theme.Panel3,
+            BackgroundTransparency=.40,
+            BorderSizePixel=0,
+            Position=UDim2.fromOffset(13,13),
+            Size=UDim2.fromOffset(82,82),
+            ZIndex=17,
+            Parent=row,
+        })
+        Round(imageHolder,11)
+        Stroke(imageHolder,color,.62,1)
+
+        local image = New("ImageLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(2,2),
+            Size=UDim2.new(1,-4,1,-4),
+            Image=opts.Image or getGameIcon(opts.UniverseId or game.GameId),
+            ScaleType=Enum.ScaleType.Crop,
+            ZIndex=18,
+            Parent=imageHolder,
+        })
+        Round(image,10)
+
+        local kicker = New("TextLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(108,12),
+            Size=UDim2.new(1,-121,0,17),
+            Font=Enum.Font.GothamBold,
+            Text=opts.Kicker or "CURRENT GAME",
+            TextColor3=color,
+            TextSize=9,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            ZIndex=17,
+            Parent=row,
+        })
+
+        local title = New("TextLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(108,31),
+            Size=UDim2.new(1,-121,0,28),
+            Font=Enum.Font.GothamBold,
+            Text=opts.Title or opts.GameName or "Loading...",
+            TextColor3=Theme.Text,
+            TextSize=15,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            TextTruncate=Enum.TextTruncate.AtEnd,
+            ZIndex=17,
+            Parent=row,
+        })
+
+        local description = New("TextLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(108,61),
+            Size=UDim2.new(1,-121,0,34),
+            Font=Enum.Font.Gotham,
+            Text=opts.Description or "Supported by Serenity Hub",
+            TextColor3=Theme.TextSoft,
+            TextSize=10,
+            TextWrapped=true,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            TextYAlignment=Enum.TextYAlignment.Top,
+            ZIndex=17,
+            Parent=row,
+        })
+
+        local state = New("TextLabel", {
+            AnchorPoint=Vector2.new(1,1),
+            BackgroundColor3=color,
+            BackgroundTransparency=.87,
+            Position=UDim2.new(1,-12,1,-11),
+            Size=UDim2.fromOffset(88,23),
+            Font=Enum.Font.GothamMedium,
+            Text=opts.Status or "SUPPORTED",
+            TextColor3=color,
+            TextSize=9,
+            ZIndex=17,
+            Parent=row,
+        })
+        Round(state,999)
+        Stroke(state,color,.55,1)
+
+        if not opts.Title and not opts.GameName then
+            task.spawn(function()
+                local experienceName = getExperienceName(opts.FallbackName)
+                if title.Parent then
+                    title.Text = experienceName
+                end
+            end)
+        end
+
+        return {
+            Row=row,
+            Image=image,
+            Title=title,
+            Description=description,
+            Status=state,
+            SetTitle=function(_,value)
+                title.Text=tostring(value or "")
+            end,
+            SetDescription=function(_,value)
+                description.Text=tostring(value or "")
+            end,
+            SetStatus=function(_,value)
+                state.Text=tostring(value or "")
+            end,
+        }
+    end
+
+    function Window:PlayerCard(parent, opts)
+        opts = opts or {}
+
+        local row = baseRow(parent, opts.Height or 112)
+        local accentColor = opts.Accent or Theme.Mint
+
+        local line = New("Frame", {
+            BackgroundColor3=accentColor,
+            BorderSizePixel=0,
+            Position=UDim2.fromOffset(0,0),
+            Size=UDim2.new(0,3,1,0),
+            ZIndex=17,
+            Parent=row
+        })

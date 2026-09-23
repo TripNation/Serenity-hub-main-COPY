@@ -1,0 +1,83 @@
+ function X:GameCard(parent)local r=row(parent,70);local img=New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(7,7),Size=UDim2.fromOffset(56,56),Image=GameIcon(),ScaleType=Enum.ScaleType.Crop,ZIndex=18,Parent=r});Round(img,7);local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(72,8),Size=UDim2.new(1,-80,0,22),Font=Enum.Font.GothamMedium,Text=GameName(),TextSize=11,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local b=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(72,30),Size=UDim2.new(1,-80,0,16),Font=Enum.Font.Gotham,Text="Current supported experience",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(b,"TextColor3","Dim");local c=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(72,47),Size=UDim2.new(1,-80,0,15),Font=Enum.Font.GothamMedium,Text="SUPPORTED",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(c,"TextColor3","A1");return r end
+ function X:PlayerCard(parent)local r=row(parent,58);local img=New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(7,7),Size=UDim2.fromOffset(44,44),Image=Avatar(),ScaleType=Enum.ScaleType.Crop,ZIndex=18,Parent=r});Round(img,999);local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(60,7),Size=UDim2.new(1,-68,0,20),Font=Enum.Font.GothamMedium,Text=LP.DisplayName,TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local b=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(60,26),Size=UDim2.new(1,-68,0,16),Font=Enum.Font.Gotham,Text="@"..LP.Name,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(b,"TextColor3","Dim");local c=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(60,41),Size=UDim2.new(1,-68,0,12),Font=Enum.Font.GothamMedium,Text="ACCESS VERIFIED",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(c,"TextColor3","A1");return r end
+
+ -- UNIVERSAL UTILITIES -------------------------------------------------
+ local U={NoClip=false,InfiniteJump=false,AntiAFK=false,ReduceLag=false};local nc={};local lag={}
+ local function coverMode(m)if m=="black"then cover.BackgroundColor3=Color3.new();cover.Visible=true elseif m=="white"then cover.BackgroundColor3=Color3.new(1,1,1);cover.Visible=true else cover.Visible=false end end
+ function X:Set3DDisabled(v)pcall(function()RunService:Set3dRenderingEnabled(not v)end)end
+ function X:SetReduceLag(v)U.ReduceLag=v;if v then for _,o in ipairs(game:GetDescendants())do if o:IsA("ParticleEmitter")or o:IsA("Trail")or o:IsA("Beam")or o:IsA("Smoke")or o:IsA("Fire")or o:IsA("Sparkles")or o:IsA("PostEffect")then if lag[o]==nil then lag[o]=o.Enabled end;o.Enabled=false elseif o:IsA("BasePart")then if lag[o]==nil then lag[o]=o.CastShadow end;o.CastShadow=false end end;if lag.__gs==nil then lag.__gs=Lighting.GlobalShadows end;Lighting.GlobalShadows=false else for o,v0 in pairs(lag)do if typeof(o)=="Instance"and o.Parent then pcall(function()if o:IsA("BasePart")then o.CastShadow=v0 else o.Enabled=v0 end end)end end;if lag.__gs~=nil then Lighting.GlobalShadows=lag.__gs end;table.clear(lag)end end
+ X.Connections[#X.Connections+1]=RunService.Stepped:Connect(function()if U.NoClip and LP.Character then for _,o in ipairs(LP.Character:GetDescendants())do if o:IsA("BasePart")then if nc[o]==nil then nc[o]=o.CanCollide end;o.CanCollide=false end end end end)
+ X.Connections[#X.Connections+1]=UserInputService.JumpRequest:Connect(function()if U.InfiniteJump then local h=LP.Character and LP.Character:FindFirstChildOfClass("Humanoid");if h then h:ChangeState(Enum.HumanoidStateType.Jumping)end end end)
+ X.Connections[#X.Connections+1]=LP.Idled:Connect(function()if U.AntiAFK then pcall(function()VirtualUser:CaptureController();VirtualUser:ClickButton2(Vector2.new())end)end end)
+ X.Cleanups[#X.Cleanups+1]=function()if U.ReduceLag then X:SetReduceLag(false)end;for o,v0 in pairs(nc)do if typeof(o)=="Instance"and o.Parent then pcall(function()o.CanCollide=v0 end)end end;coverMode(nil)end
+
+ -- UNIVERSAL DEFAULT PAGES --------------------------------------------
+ function X:AddUniversalPages()
+  local misc=X:AddPage("Misc");local settings=X:AddPage("Settings");local settingsUI=X:AddPage("Settings UI")
+  local server=X:Feature(misc,"Server","Reusable server/session actions.",{Accent="cyan",Expanded=true})
+  X:Live(server,"Place ID",tostring(game.PlaceId));X:Live(server,"Job ID",tostring(game.JobId):sub(1,18).."...")
+  X:Action(server,"Copy Job ID","Copy the current server identifier.",function()local ok=CopyText(game.JobId);X:Notify("Server",ok and"Job ID copied."or"Clipboard unavailable.",ok)end,{Accent="cyan",ButtonText="COPY"})
+  X:Action(server,"Rejoin Server","Reconnect to this server once.",function()pcall(function()TeleportService:TeleportToPlaceInstance(game.PlaceId,game.JobId,LP)end)end,{Accent="cyan",ButtonText="REJOIN"})
+  local pl=X:Feature(misc,"Player","Universal local-player utilities.",{Accent="mint"})
+  X:Live(pl,"Local Player",LP.DisplayName)
+  X:Switch(pl,"NoClip","No Clip","Disable local collisions while enabled.",C.NoClip,function(v)U.NoClip=v;if not v then for o,v0 in pairs(nc)do if typeof(o)=="Instance"and o.Parent then pcall(function()o.CanCollide=v0 end)end end;table.clear(nc)end end,{Accent="mint"})
+  X:Switch(pl,"InfiniteJump","Infinite Jump","Allow repeated jump requests.",C.InfiniteJump,function(v)U.InfiniteJump=v end,{Accent="mint"})
+  local perf=X:Feature(misc,"Performance","Shared local performance tools.",{Accent="warning"})
+  X:Switch(perf,"ReduceLag","Reduce Lag","Reduce particles, post effects and shadows.",C.ReduceLag,function(v)X:SetReduceLag(v)end,{Accent="warning"})
+  X:Switch(perf,"Disable3D","Disable 3D Rendering","Pause the 3D world while keeping Serenity visible.",C.Disable3D,function(v)X:Set3DDisabled(v)end,{Accent="warning"})
+  local black,white
+  black=X:Switch(perf,"BlackScreen","Black Screen","Cover the world with a black screen.",C.BlackScreen,function(v)if v then coverMode("black");if white then white:Set(false,true);X:SetConfig("WhiteScreen",false)end else if not C.WhiteScreen then coverMode(nil)end end end,{Accent="warning"})
+  white=X:Switch(perf,"WhiteScreen","White Screen","Cover the world with a white screen.",C.WhiteScreen,function(v)if v then coverMode("white");if black then black:Set(false,true);X:SetConfig("BlackScreen",false)end else if not C.BlackScreen then coverMode(nil)end end end,{Accent="warning"})
+  X:Slider(perf,"FPSCap","FPS Limit","Apply an executor FPS cap when supported.",10,240,C.FPSCap,function(v)if type(setfpscap)=="function"then pcall(setfpscap,v)end end,{Accent="warning"})
+  local other=X:Feature(misc,"Misc","Shared miscellaneous utilities.",{Accent="purple"})
+  X:Switch(other,"AntiAFK","Anti-AFK","Keep the local client active.",C.AntiAFK,function(v)U.AntiAFK=v end,{Accent="purple"})
+  X:Action(other,"Copy Discord Invite","Copy the shared Serenity Discord link.",function()local ok=CopyText(DISCORD);X:Notify("Discord",ok and"Invite copied."or"Clipboard unavailable.",ok)end,{Accent="purple",ButtonText="COPY"})
+
+  local cm=X:Feature(settings,"Config Manager","Auto-save is always used when file APIs exist.",{Accent="mint",Expanded=true})
+  X:Live(cm,"Auto Save",fs()and"Enabled"or"File API unavailable");X:Live(cm,"Config Path",path)
+  X:Action(cm,"Save Now","Write the current configuration immediately.",function()local ok=save();X:Notify("Config",ok and"Configuration saved."or"Could not save.",ok)end,{Accent="mint",ButtonText="SAVE"})
+  X:Action(cm,"Reset Settings","Restore universal settings to defaults.",function()for k in pairs(C)do C[k]=nil end;for k,v in pairs(Defaults)do C[k]=v end;for k,it in pairs(X.Items)do if C[k]~=nil and type(it.Set)=="function"then pcall(function()it:Set(C[k],true)end)end end;X:SetTheme(C.Theme,true);applyGlass();save();X:Notify("Config","Settings restored to defaults.",true)end,{Accent="danger",ButtonText="RESET",Confirm=true,ConfirmText="AGAIN"})
+  local gen=X:Feature(settings,"General","Shared Serenity behavior.",{Accent="cyan"});X:Paragraph(gen,"Universal Settings","Game-specific settings belong with their game features. Config management remains available in every supported game.")
+
+  local th=X:Feature(settingsUI,"Theme","Change Serenity's complete shared palette.",{Accent="purple",Expanded=true})
+  X:Select(th,"Theme","Theme","Choose a shared color preset.",ThemeNames,C.Theme,function(v)X:SetTheme(v)end,{Accent="purple"})
+  X:Action(th,"Reset Theme","Return to the default Serenity colors.",function()if X.Items.Theme then X.Items.Theme:Set("Serenity",true)end;X:SetTheme("Serenity")end,{Accent="purple",ButtonText="RESET"})
+  local bg=X:Feature(settingsUI,"Background UI","Adjust the shared glass/background style.",{Accent="cyan"})
+  X:Select(bg,"BackgroundStyle","Background Style","Choose Serenity's glass character.",{"Glass","Extra Glass","Solid"},C.BackgroundStyle,function(v)
+   C.BackgroundStyle=v;applyGlass();later()
+  end,{Accent="cyan"})
+
+  X:Slider(bg,"ShellTransparency","Window Glass","Adjust the main window/sidebar glass only.",4,38,C.ShellTransparency,function(v)
+   C.ShellTransparency=v;applyGlass();later()
+  end,{Accent="cyan",Suffix="%"})
+
+  X:Slider(bg,"FeatureTransparency","Feature Glass","Transparency is strongest on Feature cards.",28,78,C.FeatureTransparency,function(v)
+   C.FeatureTransparency=v;applyGlass();later()
+  end,{Accent="purple",Suffix="%"})
+
+  X:Slider(bg,"ControlTransparency","Control Glass","Keep options darker/readable inside Features.",18,62,C.ControlTransparency,function(v)
+   C.ControlTransparency=v;applyGlass();later()
+  end,{Accent="mint",Suffix="%"})
+
+  X:Paragraph(bg,"Navigation Opacity","Sidebar tabs intentionally stay readable and are not controlled by the glass sliders.")
+  local lang=X:Feature(settingsUI,"Language","Shared language slot for future translations.",{Accent="mint"});X:Select(lang,"Language","Select Language","Only implemented languages should appear here.",{"English"},"English",function()end,{Accent="mint"})
+  local custom=X:Feature(settingsUI,"Custom UI","Small shared presentation preferences.",{Accent="warning"});X:Switch(custom,"PremiumMotion","Premium Motion","Keep subtle shared UI animations enabled.",true,function()end,{Accent="warning"})
+
+  -- Apply saved universal states after the controls exist.
+  U.NoClip=C.NoClip==true
+  U.InfiniteJump=C.InfiniteJump==true
+  U.AntiAFK=C.AntiAFK==true
+  if C.ReduceLag then X:SetReduceLag(true) end
+  if C.Disable3D then X:Set3DDisabled(true) end
+  if C.BlackScreen then coverMode("black") elseif C.WhiteScreen then coverMode("white") end
+  if type(setfpscap)=="function" then pcall(setfpscap,tonumber(C.FPSCap) or 60) end
+
+  return{Misc=misc,Settings=settings,SettingsUI=settingsUI}
+ end
+
+ -- Initial theme/config state ------------------------------------------
+ if Presets[C.Theme]then X:SetTheme(C.Theme,true)end;applyGlass();return X
+end
+
+
+return Library

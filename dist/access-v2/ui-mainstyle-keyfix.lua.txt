@@ -1,0 +1,484 @@
+-- Access UI -------------------------------------------------------------
+local function New(class,props)
+    local o=Instance.new(class)
+    for k,v in pairs(props or {}) do
+        if k~="Parent" then o[k]=v end
+    end
+    if props and props.Parent then o.Parent=props.Parent end
+    return o
+end
+
+local function Round(p,r)
+    return New("UICorner",{CornerRadius=UDim.new(0,r or 10),Parent=p})
+end
+
+local function Stroke(p,c,t,thickness)
+    return New("UIStroke",{
+        Color=c,
+        Transparency=t or .72,
+        Thickness=thickness or 1,
+        ApplyStrokeMode=Enum.ApplyStrokeMode.Border,
+        Parent=p
+    })
+end
+
+local function parentGui()
+    if type(gethui)=="function" then
+        local ok,r=pcall(gethui)
+        if ok and r then return r end
+    end
+    local ok,r=pcall(function() return CoreGui end)
+    if ok and r then return r end
+    return LP:WaitForChild("PlayerGui")
+end
+
+local parent=parentGui()
+local old
+pcall(function() old=parent:FindFirstChild("SerenityAccessV2") end)
+if old then old:Destroy() end
+
+local gui=New("ScreenGui",{
+    Name="SerenityAccessV2",
+    ResetOnSpawn=false,
+    IgnoreGuiInset=true,
+    ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
+    DisplayOrder=999999,
+    Parent=parent
+})
+
+local shade=New("Frame",{
+    Name="Shade",
+    BackgroundColor3=Color3.fromRGB(3,6,8),
+    BackgroundTransparency=.34,
+    BorderSizePixel=0,
+    Size=UDim2.fromScale(1,1),
+    Parent=gui
+})
+
+local main=New("Frame",{
+    Name="Window",
+    AnchorPoint=Vector2.new(.5,.5),
+    Position=UDim2.fromScale(.5,.5),
+    Size=UDim2.fromOffset(470,318),
+    BackgroundColor3=Color3.fromRGB(12,16,20),
+    BackgroundTransparency=.09,
+    BorderSizePixel=0,
+    Parent=shade
+})
+Round(main,14)
+Stroke(main,Color3.fromRGB(61,72,83),.36,1)
+
+local inner=New("Frame",{
+    Name="Inner",
+    BackgroundColor3=Color3.fromRGB(18,23,28),
+    BackgroundTransparency=.22,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(1,1),
+    Size=UDim2.new(1,-2,1,-2),
+    Parent=main
+})
+Round(inner,13)
+
+New("Frame",{
+    Name="Accent",
+    BackgroundColor3=Color3.fromRGB(46,215,231),
+    BackgroundTransparency=.08,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,0),
+    Size=UDim2.new(0,3,1,0),
+    Parent=main
+})
+Round(main.Accent,14)
+
+local scale=New("UIScale",{Scale=1,Parent=main})
+local function resize()
+    local cam=workspace.CurrentCamera
+    if not cam then return end
+    local v=cam.ViewportSize
+    scale.Scale=math.min(1,(v.X-24)/470,(v.Y-24)/318)
+end
+resize()
+if workspace.CurrentCamera then
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(resize)
+end
+
+local top=New("Frame",{
+    Name="Topbar",
+    BackgroundTransparency=1,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,0),
+    Size=UDim2.new(1,0,0,64),
+    Parent=inner
+})
+
+local logo=New("ImageLabel",{
+    Name="Logo",
+    BackgroundColor3=Color3.fromRGB(7,12,16),
+    BackgroundTransparency=.18,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(18,14),
+    Size=UDim2.fromOffset(38,38),
+    Image="rbxthumb://type=Asset&id=89023606689629&w=420&h=420",
+    ScaleType=Enum.ScaleType.Fit,
+    Parent=top
+})
+Round(logo,10)
+Stroke(logo,Color3.fromRGB(48,210,231),.54,1)
+
+New("TextLabel",{
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(68,13),
+    Size=UDim2.new(1,-126,0,24),
+    Font=Enum.Font.GothamBold,
+    Text="SERENITY HUB",
+    TextColor3=Color3.fromRGB(244,247,250),
+    TextSize=17,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=top
+})
+
+New("TextLabel",{
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(68,36),
+    Size=UDim2.new(1,-126,0,16),
+    Font=Enum.Font.GothamMedium,
+    Text="KEY SYSTEM  •  LIFETIME ACCESS",
+    TextColor3=Color3.fromRGB(55,215,232),
+    TextSize=9,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=top
+})
+
+local close=New("TextButton",{
+    Name="Close",
+    AutoButtonColor=false,
+    BackgroundColor3=Color3.fromRGB(27,33,40),
+    BackgroundTransparency=.20,
+    BorderSizePixel=0,
+    Position=UDim2.new(1,-48,0,16),
+    Size=UDim2.fromOffset(30,30),
+    Font=Enum.Font.GothamMedium,
+    Text="×",
+    TextColor3=Color3.fromRGB(178,188,199),
+    TextSize=19,
+    Parent=top
+})
+Round(close,8)
+Stroke(close,Color3.fromRGB(62,72,83),.56,1)
+close.MouseButton1Click:Connect(function()
+    if gui then gui:Destroy() end
+end)
+
+New("Frame",{
+    BackgroundColor3=Color3.fromRGB(52,63,74),
+    BackgroundTransparency=.64,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(18,63),
+    Size=UDim2.new(1,-36,0,1),
+    Parent=inner
+})
+
+local content=New("Frame",{
+    Name="Content",
+    BackgroundTransparency=1,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(18,76),
+    Size=UDim2.new(1,-36,1,-90),
+    Parent=inner
+})
+
+local info=New("Frame",{
+    Name="Info",
+    BackgroundColor3=Color3.fromRGB(22,28,34),
+    BackgroundTransparency=.24,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,0),
+    Size=UDim2.new(1,0,0,46),
+    Parent=content
+})
+Round(info,10)
+Stroke(info,Color3.fromRGB(54,66,77),.58,1)
+New("Frame",{
+    BackgroundColor3=Color3.fromRGB(70,232,190),
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,9),
+    Size=UDim2.fromOffset(2,28),
+    Parent=info
+})
+New("TextLabel",{
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(13,7),
+    Size=UDim2.new(1,-24,0,15),
+    Font=Enum.Font.GothamMedium,
+    Text="ONE-TIME VERIFICATION",
+    TextColor3=Color3.fromRGB(72,224,177),
+    TextSize=9,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=info
+})
+New("TextLabel",{
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(13,21),
+    Size=UDim2.new(1,-24,0,17),
+    Font=Enum.Font.Gotham,
+    Text="Don't worry — get the key once and your Serenity access is lifetime.",
+    TextColor3=Color3.fromRGB(178,188,198),
+    TextSize=9,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=info
+})
+
+local input=New("TextBox",{
+    Name="KeyInput",
+    ClearTextOnFocus=false,
+    PlaceholderText="Enter your Serenity key...",
+    Text="",
+    BackgroundColor3=Color3.fromRGB(24,30,37),
+    BackgroundTransparency=.10,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,57),
+    Size=UDim2.new(1,0,0,40),
+    Font=Enum.Font.GothamMedium,
+    TextColor3=Color3.fromRGB(242,246,249),
+    PlaceholderColor3=Color3.fromRGB(121,133,146),
+    TextSize=11,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=content
+})
+Round(input,9)
+Stroke(input,Color3.fromRGB(58,70,81),.46,1)
+New("UIPadding",{
+    PaddingLeft=UDim.new(0,12),
+    PaddingRight=UDim.new(0,12),
+    Parent=input
+})
+
+local status=New("TextLabel",{
+    Name="Status",
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(2,101),
+    Size=UDim2.new(1,-4,0,16),
+    Font=Enum.Font.Gotham,
+    Text="Get your key from a provider, then unlock Serenity.",
+    TextColor3=Color3.fromRGB(130,143,156),
+    TextSize=8,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    Parent=content
+})
+
+local function setStatus(text,good)
+    status.Text=tostring(text or "")
+    status.TextColor3=good==true and Color3.fromRGB(72,224,177)
+        or good==false and Color3.fromRGB(235,105,120)
+        or Color3.fromRGB(130,143,156)
+end
+
+local function providerButton(text,x,w,accent,callback)
+    local b=New("TextButton",{
+        AutoButtonColor=false,
+        BackgroundColor3=Color3.fromRGB(25,31,38),
+        BackgroundTransparency=.10,
+        BorderSizePixel=0,
+        Position=UDim2.fromOffset(x,124),
+        Size=UDim2.fromOffset(w,34),
+        Font=Enum.Font.GothamMedium,
+        Text=text,
+        TextColor3=Color3.fromRGB(210,217,225),
+        TextSize=9,
+        Parent=content
+    })
+    Round(b,8)
+    Stroke(b,accent,.55,1)
+
+    New("Frame",{
+        BackgroundColor3=accent,
+        BorderSizePixel=0,
+        Position=UDim2.fromOffset(0,8),
+        Size=UDim2.fromOffset(2,18),
+        Parent=b
+    })
+
+    b.MouseEnter:Connect(function()
+        b.BackgroundTransparency=.02
+        b.TextColor3=accent
+    end)
+    b.MouseLeave:Connect(function()
+        b.BackgroundTransparency=.10
+        b.TextColor3=Color3.fromRGB(210,217,225)
+    end)
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
+local totalWidth=434
+local gap=8
+local providerWidth=math.floor((totalWidth-gap*2)/3)
+
+providerButton("LINKVERTISE",0,providerWidth,Color3.fromRGB(54,207,235),function()
+    local u=R(ID_LV)
+    if copyText(u) then setStatus("Linkvertise link copied.",true)
+    else setStatus("Clipboard access is unavailable.",false) end
+    u=nil
+end)
+
+providerButton("LOOTLABS",providerWidth+gap,providerWidth,Color3.fromRGB(157,138,255),function()
+    local u=R(ID_LL)
+    if copyText(u) then setStatus("LootLabs link copied.",true)
+    else setStatus("Clipboard access is unavailable.",false) end
+    u=nil
+end)
+
+providerButton("DISCORD",(providerWidth+gap)*2,providerWidth,Color3.fromRGB(72,224,177),function()
+    local u=R(ID_DC)
+    if copyText(u) then setStatus("Discord invite copied.",true)
+    else setStatus("Clipboard access is unavailable.",false) end
+    u=nil
+end)
+
+local verify=New("TextButton",{
+    Name="Unlock",
+    AutoButtonColor=false,
+    BackgroundColor3=Color3.fromRGB(38,194,173),
+    BackgroundTransparency=.04,
+    BorderSizePixel=0,
+    Position=UDim2.fromOffset(0,170),
+    Size=UDim2.new(1,0,0,40),
+    Font=Enum.Font.GothamBold,
+    Text="UNLOCK SERENITY",
+    TextColor3=Color3.fromRGB(7,18,19),
+    TextSize=10,
+    Parent=content
+})
+Round(verify,9)
+
+New("TextLabel",{
+    BackgroundTransparency=1,
+    Position=UDim2.fromOffset(0,214),
+    Size=UDim2.new(1,0,0,18),
+    Font=Enum.Font.Gotham,
+    Text=fsReady()
+        and "Successful verification is saved locally — you won't need the key again."
+        or "This executor can't save files, so access will last for this session.",
+    TextColor3=Color3.fromRGB(101,113,125),
+    TextSize=7,
+    TextWrapped=true,
+    TextXAlignment=Enum.TextXAlignment.Center,
+    Parent=content
+})
+
+do
+    local UIS=game:GetService("UserInputService")
+    local dragging=false
+    local dragStart
+    local startPos
+    local dragInput
+
+    top.InputBegan:Connect(function(inputObj)
+        if inputObj.UserInputType==Enum.UserInputType.MouseButton1
+        or inputObj.UserInputType==Enum.UserInputType.Touch then
+            dragging=true
+            dragStart=inputObj.Position
+            startPos=main.Position
+            inputObj.Changed:Connect(function()
+                if inputObj.UserInputState==Enum.UserInputState.End then
+                    dragging=false
+                end
+            end)
+        end
+    end)
+
+    top.InputChanged:Connect(function(inputObj)
+        if inputObj.UserInputType==Enum.UserInputType.MouseMovement
+        or inputObj.UserInputType==Enum.UserInputType.Touch then
+            dragInput=inputObj
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(inputObj)
+        if dragging and inputObj==dragInput and dragStart and startPos then
+            local delta=inputObj.Position-dragStart
+            main.Position=UDim2.new(
+                startPos.X.Scale,startPos.X.Offset+delta.X,
+                startPos.Y.Scale,startPos.Y.Offset+delta.Y
+            )
+        end
+    end)
+end
+
+local busy=false
+verify.MouseButton1Click:Connect(function()
+    if busy then return end
+    local entered=trim(input.Text)
+    if entered=="" then
+        setStatus("Enter your key first.",false)
+        return
+    end
+
+    busy=true
+    verify.Text="VERIFYING..."
+    setStatus("Checking Serenity access...",nil)
+
+    task.spawn(function()
+        local keyUrl=R(ID_KEY)
+        local ok,remote=pcall(function()
+            return game:HttpGet(keyUrl,false)
+        end)
+        if not ok then
+            ok,remote=pcall(function()
+                return game:HttpGet(keyUrl,true)
+            end)
+        end
+        if not ok then
+            ok,remote=pcall(function()
+                return game:HttpGet(keyUrl)
+            end)
+        end
+        keyUrl=nil
+        remote=ok and trim(remote) or nil
+
+        if remote and #remote>=2 then
+            local first=ss(remote,1,1)
+            local last=ss(remote,#remote,#remote)
+            if (first=='"' and last=='"') or (first=="'" and last=="'") then
+                remote=trim(ss(remote,2,#remote-1))
+            end
+        end
+        local remoteLower=remote and string.lower(remote) or ""
+        local remoteUsable=type(remote)=="string"
+            and remote~=""
+            and #remote<=128
+            and not string.find(remoteLower,"<html",1,true)
+            and not string.find(remoteLower,"<!doctype",1,true)
+
+        local embeddedOk=(H(entered)==((2100000000+2027360581)%4294967291))
+        local valid=(remoteUsable and secureEq(entered,remote)) or embeddedOk
+        remote=nil
+
+        if not valid then
+            busy=false
+            verify.Text="UNLOCK SERENITY"
+            if ok and not remoteUsable then
+                setStatus("Key server returned an invalid response. Check the key or try again.",false)
+            else
+                setStatus("Invalid Serenity key.",false)
+            end
+            return
+        end
+
+        local saved,proof=saveReceipt(entered)
+        proof=proof or proofFor(LP.UserId)
+        applyCompat(entered,proof)
+        setStatus(
+            saved and "Access verified — lifetime access saved."
+                or "Access verified — session unlocked.",
+            true
+        )
+        verify.Text="ACCESS VERIFIED"
+
+        task.wait(.55)
+        if gui then gui:Destroy() end
+        launch(entered,proof)
+    end)
+end)
+
+return nil

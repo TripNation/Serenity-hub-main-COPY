@@ -1,0 +1,41 @@
+Void={BG=Color3.fromRGB(19,8,29),Side=Color3.fromRGB(25,11,37),Top=Color3.fromRGB(22,9,34),Panel=Color3.fromRGB(39,21,55),Panel2=Color3.fromRGB(51,29,70),Panel3=Color3.fromRGB(64,37,86),Stroke=Color3.fromRGB(102,68,128),Text=Color3.fromRGB(249,243,253),Soft=Color3.fromRGB(220,202,232),Dim=Color3.fromRGB(164,137,181),A1=Color3.fromRGB(183,105,255),A2=Color3.fromRGB(95,195,255),A3=Color3.fromRGB(236,109,219),Warn=Color3.fromRGB(244,198,78),Danger=Color3.fromRGB(241,99,128),Track=Color3.fromRGB(76,50,92)},
+Fire={BG=Color3.fromRGB(30,12,7),Side=Color3.fromRGB(38,15,8),Top=Color3.fromRGB(35,13,7),Panel=Color3.fromRGB(57,27,15),Panel2=Color3.fromRGB(72,34,18),Panel3=Color3.fromRGB(88,43,23),Stroke=Color3.fromRGB(128,70,44),Text=Color3.fromRGB(255,246,240),Soft=Color3.fromRGB(236,207,192),Dim=Color3.fromRGB(182,139,118),A1=Color3.fromRGB(255,130,58),A2=Color3.fromRGB(255,195,73),A3=Color3.fromRGB(255,92,116),Warn=Color3.fromRGB(255,203,76),Danger=Color3.fromRGB(255,92,105),Track=Color3.fromRGB(93,54,37)},
+Coffee={BG=Color3.fromRGB(25,19,14),Side=Color3.fromRGB(32,24,17),Top=Color3.fromRGB(29,21,15),Panel=Color3.fromRGB(48,37,28),Panel2=Color3.fromRGB(59,45,34),Panel3=Color3.fromRGB(72,55,42),Stroke=Color3.fromRGB(109,87,69),Text=Color3.fromRGB(250,245,238),Soft=Color3.fromRGB(224,211,195),Dim=Color3.fromRGB(169,150,129),A1=Color3.fromRGB(218,166,102),A2=Color3.fromRGB(118,194,184),A3=Color3.fromRGB(185,145,216),Warn=Color3.fromRGB(238,192,79),Danger=Color3.fromRGB(226,103,110),Track=Color3.fromRGB(80,66,53)},
+Gray={BG=Color3.fromRGB(25,29,32),Side=Color3.fromRGB(31,36,40),Top=Color3.fromRGB(28,32,36),Panel=Color3.fromRGB(45,51,56),Panel2=Color3.fromRGB(56,63,69),Panel3=Color3.fromRGB(69,77,84),Stroke=Color3.fromRGB(102,111,119),Text=Color3.fromRGB(247,249,250),Soft=Color3.fromRGB(215,220,224),Dim=Color3.fromRGB(157,165,172),A1=Color3.fromRGB(149,199,203),A2=Color3.fromRGB(119,179,229),A3=Color3.fromRGB(177,151,222),Warn=Color3.fromRGB(237,198,83),Danger=Color3.fromRGB(231,105,117),Track=Color3.fromRGB(82,90,97)},
+Rose={BG=Color3.fromRGB(31,12,20),Side=Color3.fromRGB(39,15,25),Top=Color3.fromRGB(36,13,22),Panel=Color3.fromRGB(59,27,39),Panel2=Color3.fromRGB(73,34,48),Panel3=Color3.fromRGB(88,41,58),Stroke=Color3.fromRGB(130,71,91),Text=Color3.fromRGB(255,245,249),Soft=Color3.fromRGB(237,205,217),Dim=Color3.fromRGB(183,139,155),A1=Color3.fromRGB(247,110,159),A2=Color3.fromRGB(114,207,235),A3=Color3.fromRGB(196,125,255),Warn=Color3.fromRGB(241,198,82),Danger=Color3.fromRGB(255,92,116),Track=Color3.fromRGB(94,53,68)},
+Galaxy={BG=Color3.fromRGB(10,10,27),Side=Color3.fromRGB(13,14,36),Top=Color3.fromRGB(11,12,32),Panel=Color3.fromRGB(24,25,54),Panel2=Color3.fromRGB(32,34,70),Panel3=Color3.fromRGB(41,44,88),Stroke=Color3.fromRGB(78,83,142),Text=Color3.fromRGB(246,246,255),Soft=Color3.fromRGB(210,211,239),Dim=Color3.fromRGB(145,148,190),A1=Color3.fromRGB(81,218,235),A2=Color3.fromRGB(122,135,255),A3=Color3.fromRGB(207,102,255),Warn=Color3.fromRGB(244,198,83),Danger=Color3.fromRGB(242,99,129),Track=Color3.fromRGB(57,60,98)}
+}
+local ThemeNames={"Serenity","Darker","Midnight","Dark","Green","Void","Fire","Coffee","Gray","Rose","Galaxy"}
+
+local function New(c,p) local o=Instance.new(c) for k,v in pairs(p or {}) do if k~="Parent" then o[k]=v end end if p and p.Parent then o.Parent=p.Parent end return o end
+local function Round(p,r) return New("UICorner",{CornerRadius=UDim.new(0,r or 9),Parent=p}) end
+local function Stroke(p,c,t) return New("UIStroke",{Color=c,Transparency=t or .7,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Parent=p}) end
+local function Tw(o,d,p) local t=TweenService:Create(o,TweenInfo.new(d or .14,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),p)t:Play()return t end
+local function CopyArray(a)local o={} for _,v in ipairs(a or {})do o[#o+1]=v end return o end
+local function SelectionSet(a)local o={} if type(a)=="table" then if #a>0 then for _,v in ipairs(a)do o[tostring(v)]=true end else for k,v in pairs(a)do if v then o[tostring(k)]=true end end end end return o end
+local function CopyText(v)local e=(getgenv and getgenv()) or _G for _,f in ipairs({e.setclipboard,e.toclipboard,e.writeclipboard,rawget(_G,"setclipboard")})do if type(f)=="function" and pcall(f,tostring(v or "")) then return true end end return false end
+local function ParentGui() if gethui then local ok,r=pcall(gethui) if ok and r then return r end end local ok,r=pcall(function()return CoreGui end) if ok and r then return r end return LP:WaitForChild("PlayerGui") end
+local function Avatar()local ok,r=pcall(function()local x=Players:GetUserThumbnailAsync(LP.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size150x150)return x end)return ok and r or "" end
+local function GameIcon()local id=tonumber(game.GameId) or tonumber(game.PlaceId) or 0 return ("rbxthumb://type=GameIcon&id=%d&w=150&h=150"):format(id) end
+local function GameName()local ok,r=pcall(function()return MarketplaceService:GetProductInfo(game.PlaceId,Enum.InfoType.Asset)end)return ok and r and r.Name or "Current Experience" end
+local function Drag(h,t)local d=false;local s;local p h.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=true;s=i.Position;p=t.Position end end) UserInputService.InputChanged:Connect(function(i)if d and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then local x=i.Position-s;t.Position=UDim2.new(p.X.Scale,p.X.Offset+x.X,p.Y.Scale,p.Y.Offset+x.Y)end end) UserInputService.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=false end end)end
+
+local Library={Version="14.6-mobile-v3-search",APIVersion=3,RendererKind="Mobile",DiscordInvite=DISCORD}
+function Library.Create(opt)
+ opt=opt or{};local W=opt.Width or 650;local H=opt.Height or 420;local T=Presets[opt.Theme or"Serenity"] or Presets.Serenity
+ local X={Pages={},Nav={},Items={},Features={},Binds={},ShellGlass={},FeatureGlass={},ControlGlass={},Connections={},Cleanups={},ThemeRefreshers={},ActivePopup=nil,Destroyed=false,ThemeName=opt.Theme or"Serenity"}
+ local Defaults={Theme=X.ThemeName,BackgroundStyle="Glass",ShellTransparency=14,FeatureTransparency=48,ControlTransparency=34,PremiumMotion=true,ReduceLag=false,Disable3D=false,BlackScreen=false,WhiteScreen=false,AntiAFK=false,NoClip=false,InfiniteJump=false,FPSCap=60,LastPage="Dashboard"}
+ for k,v in pairs(opt.DefaultConfig or{})do Defaults[k]=v end
+ local C={}for k,v in pairs(Defaults)do C[k]=v end
+ local path=opt.ConfigPath or("SerenityHub/config-%s.json"):format(tostring(game.GameId));local saveId=0
+ local function fs()return opt.DisableInternalConfig~=true and type(writefile)=="function" and type(readfile)=="function" and type(isfile)=="function" end
+ if fs() then pcall(function()if isfile(path)then local d=HttpService:JSONDecode(readfile(path))for k,v in pairs(d)do
+  if Defaults[k]~=nil then C[k]=v end
+ end
+ if d.BackgroundTransparency~=nil and d.FeatureTransparency==nil then
+  C.FeatureTransparency=math.clamp(tonumber(d.BackgroundTransparency) or 48,30,72)
+ end
+ end end)end
+ local function save()if not fs()then return false end if type(makefolder)=="function"then pcall(makefolder,"SerenityHub")end return pcall(function()writefile(path,HttpService:JSONEncode(C))end)end
+ local function later()saveId+=1;local id=saveId;task.delay(.4,function()if id==saveId and not X.Destroyed then save()end end)end
+ X.Config=C;X.DefaultConfig=Defaults;X.ConfigPath=path

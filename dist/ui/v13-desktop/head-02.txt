@@ -1,0 +1,150 @@
+        ZIndex = z or (parent.ZIndex + 20),
+        Parent = parent,
+    })
+    if callback then
+        button.MouseButton1Click:Connect(callback)
+    end
+    return button
+end
+
+local function makeDraggable(handle, target)
+    local dragging = false
+    local dragStart, startPos
+
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+        end
+    end)
+
+    Track(UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end))
+
+    Track(UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end))
+end
+
+local function copyText(text)
+    text = tostring(text or "")
+
+    local candidates = {
+        rawget(_G, "setclipboard"),
+        rawget(_G, "toclipboard"),
+        rawget(_G, "writeclipboard"),
+    }
+
+    if getgenv then
+        local env = getgenv()
+        table.insert(candidates, env and env.setclipboard)
+        table.insert(candidates, env and env.toclipboard)
+        table.insert(candidates, env and env.writeclipboard)
+    end
+
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            local ok = pcall(fn, text)
+            if ok then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+local function getPlayerHeadshot(userId)
+    local ok, image = pcall(function()
+        local content = Players:GetUserThumbnailAsync(
+            userId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size150x150
+        )
+        return content
+    end)
+
+    return ok and image or ""
+end
+
+local function getGameIcon(universeId)
+    universeId = tonumber(universeId) or tonumber(game.GameId) or 0
+    if universeId <= 0 then
+        universeId = tonumber(game.PlaceId) or 0
+    end
+
+    return ("rbxthumb://type=GameIcon&id=%d&w=150&h=150"):format(universeId)
+end
+
+local function getExperienceName(fallback)
+    local ok, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId, Enum.InfoType.Asset)
+    end)
+
+    if ok and type(info) == "table" and type(info.Name) == "string" and info.Name ~= "" then
+        return info.Name
+    end
+
+    return fallback or "Current Experience"
+end
+
+function Library.Create(options)
+    options = options or {}
+
+    local width, height = options.Width or 850, options.Height or 520
+    local sidebarOpen, sidebarClosed = options.SidebarWidth or 210, 70
+    local logoId = options.Logo or "rbxthumb://type=Asset&id=89023606689629&w=420&h=420"
+    local discordInvite = options.DiscordInvite or Library.DiscordInvite
+    local showTopProfile = options.ShowTopProfile ~= false
+    local premiumMotion = options.PremiumMotion ~= false
+
+    local playerGui = player:FindFirstChildOfClass("PlayerGui")
+    local old = CoreGui:FindFirstChild("SerenityHubUI")
+        or (playerGui and playerGui:FindFirstChild("SerenityHubUI"))
+
+    if old then
+        old:Destroy()
+    end
+
+    local gui = New("ScreenGui", {
+        Name = "SerenityHubUI",
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    })
+
+    pcall(function()
+        gui.Parent = CoreGui
+    end)
+
+    if not gui.Parent then
+        gui.Parent = player:WaitForChild("PlayerGui")
+    end
+
+    local main = New("Frame", {
+        Name = "Main",
+        AnchorPoint = Vector2.new(.5,.5),
+        Position = UDim2.fromScale(.5,.5),
+        Size = UDim2.fromOffset(width,height),
+        BackgroundColor3 = Theme.BG,
+        BackgroundTransparency = .14,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+        Visible = false,

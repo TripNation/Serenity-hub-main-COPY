@@ -1,0 +1,824 @@
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0,1),
+            NumberSequenceKeypoint.new(.50,.80),
+            NumberSequenceKeypoint.new(1,1),
+        }),
+        Parent = sheen,
+    })
+
+    if premiumMotion then
+        task.spawn(function()
+            while sheen.Parent do
+                sheen.Position = UDim2.fromOffset(-150,0)
+
+                Tween(
+                    sheen,
+                    3.8,
+                    {Position = UDim2.new(1,30,0,0)},
+                    Enum.EasingStyle.Sine,
+                    Enum.EasingDirection.InOut
+                ).Completed:Wait()
+
+                task.wait(4.0)
+            end
+        end)
+    else
+        sheen.Visible = false
+    end
+
+    --------------------------------------------------------------------
+    -- NEW V12: TOPBAR PLAYER PROFILE
+    -- DisplayName (nickname) + @Username, designed to work for every game.
+    --------------------------------------------------------------------
+
+    local profileChip
+
+    if showTopProfile then
+        profileChip = New("Frame", {
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,-102,.5,0),
+            Size = UDim2.fromOffset(198,42),
+            BackgroundColor3 = Theme.Panel,
+            BackgroundTransparency = .64,
+            BorderSizePixel = 0,
+            ZIndex = 15,
+            Parent = topbar,
+        })
+        Round(profileChip, 12)
+        local profileStroke = Stroke(profileChip, Theme.StrokeSoft, .78, 1)
+        Glass(profileChip, .50, .76)
+
+        profileChip.MouseEnter:Connect(function()
+            Tween(profileChip,.14,{BackgroundTransparency=.52})
+            Tween(profileStroke,.14,{Color=Theme.Mint,Transparency=.58})
+        end)
+
+        profileChip.MouseLeave:Connect(function()
+            Tween(profileChip,.14,{BackgroundTransparency=.64})
+            Tween(profileStroke,.14,{Color=Theme.StrokeSoft,Transparency=.78})
+        end)
+
+        local avatarWrap = New("Frame", {
+            Position = UDim2.fromOffset(6,5),
+            Size = UDim2.fromOffset(32,32),
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .35,
+            BorderSizePixel = 0,
+            ZIndex = 16,
+            Parent = profileChip,
+        })
+        Round(avatarWrap, 999)
+        Stroke(avatarWrap, Theme.Cyan, .62, 1)
+
+        local avatar = New("ImageLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(2,2),
+            Size = UDim2.fromOffset(28,28),
+            Image = "",
+            ZIndex = 17,
+            Parent = avatarWrap,
+        })
+        Round(avatar, 999)
+
+        task.spawn(function()
+            local image = getPlayerHeadshot(player.UserId)
+            if avatar.Parent then
+                avatar.Image = image
+            end
+        end)
+
+        local presence = New("Frame", {
+            AnchorPoint = Vector2.new(.5,.5),
+            Position = UDim2.new(1,-3,1,-3),
+            Size = UDim2.fromOffset(7,7),
+            BackgroundColor3 = Theme.Mint,
+            BorderSizePixel = 0,
+            ZIndex = 19,
+            Parent = avatarWrap,
+        })
+        Round(presence,999)
+        Stroke(presence,Theme.BG,.12,1)
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(47,4),
+            Size = UDim2.new(1,-53,0,18),
+            Font = Enum.Font.GothamMedium,
+            Text = player.DisplayName,
+            TextColor3 = Theme.Text,
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 16,
+            Parent = profileChip,
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(47,21),
+            Size = UDim2.new(1,-53,0,15),
+            Font = Enum.Font.Gotham,
+            Text = "@" .. player.Name,
+            TextColor3 = Theme.TextDim,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 16,
+            Parent = profileChip,
+        })
+    end
+
+    local Window
+
+    local function topButton(iconName, offset, callback)
+        local holder = New("Frame", {
+            AnchorPoint = Vector2.new(1,.5),
+            Position = UDim2.new(1,offset,.5,0),
+            Size = UDim2.fromOffset(36,36),
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .73,
+            ZIndex = 15,
+            Parent = topbar,
+        })
+        Round(holder,11)
+        Stroke(holder,Theme.StrokeSoft,.84,1)
+
+        local image = Icon(holder,iconName,{
+            AnchorPoint=Vector2.new(.5,.5),
+            Position=UDim2.fromScale(.5,.5),
+            Size=UDim2.fromOffset(17,17),
+            ZIndex=16
+        })
+
+        local hit = Overlay(holder,callback)
+
+        hit.MouseEnter:Connect(function()
+            Tween(holder,.12,{BackgroundTransparency=.48})
+            Tween(image,.12,{ImageColor3=Theme.Cyan})
+        end)
+
+        hit.MouseLeave:Connect(function()
+            Tween(holder,.12,{BackgroundTransparency=.73})
+            Tween(image,.12,{ImageColor3=Theme.Icon})
+        end)
+    end
+
+    --------------------------------------------------------------------
+    -- BODY / SIDEBAR
+    --------------------------------------------------------------------
+
+    local body = New("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(0,62),
+        Size = UDim2.new(1,0,1,-62),
+        ZIndex = 11,
+        Parent = main,
+    })
+
+    local sidebar = New("Frame", {
+        BackgroundColor3 = Theme.Sidebar,
+        BackgroundTransparency = .30,
+        Size = UDim2.new(0,sidebarOpen,1,0),
+        ClipsDescendants = true,
+        ZIndex = 12,
+        Parent = body,
+    })
+    Glass(sidebar,.40,.66)
+
+    local content = New("Frame", {
+        BackgroundColor3 = Theme.BG,
+        BackgroundTransparency = .40,
+        Position = UDim2.fromOffset(sidebarOpen,0),
+        Size = UDim2.new(1,-sidebarOpen,1,0),
+        ClipsDescendants = true,
+        ZIndex = 12,
+        Parent = body,
+    })
+
+    local sideHeader = New("Frame", {
+        BackgroundColor3 = Theme.Panel,
+        BackgroundTransparency = .60,
+        Position = UDim2.fromOffset(9,11),
+        Size = UDim2.new(1,-18,0,60),
+        ClipsDescendants = true,
+        ZIndex = 13,
+        Parent = sidebar,
+    })
+    Round(sideHeader,15)
+    Stroke(sideHeader,Theme.StrokeSoft,.75,1)
+    Glass(sideHeader,.46,.73)
+
+    local sideLogo = New("ImageLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(8,8),
+        Size = UDim2.fromOffset(44,44),
+        ScaleType = Enum.ScaleType.Fit,
+        Image = logoId,
+        ImageColor3 = Theme.White,
+        ZIndex = 14,
+        Parent = sideHeader,
+    })
+
+    local sideBrand = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(64,0),
+        Size = UDim2.fromOffset(122,60),
+        Font = Enum.Font.GothamBold,
+        Text = "SERENITY HUB",
+        TextColor3 = Theme.Text,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 14,
+        Parent = sideHeader,
+    })
+
+    local collapse = New("Frame", {
+        AnchorPoint = Vector2.new(1,.5),
+        Position = UDim2.new(1,-8,.5,0),
+        Size = UDim2.fromOffset(28,28),
+        BackgroundColor3 = Theme.Panel2,
+        BackgroundTransparency = .58,
+        ZIndex = 15,
+        Parent = sideHeader,
+    })
+    Round(collapse,9)
+    Stroke(collapse,Theme.StrokeSoft,.82,1)
+
+    local collapseIcon = Icon(collapse,"chevron",{
+        AnchorPoint=Vector2.new(.5,.5),
+        Position=UDim2.fromScale(.5,.5),
+        Size=UDim2.fromOffset(14,14),
+        ZIndex=16
+    })
+    collapseIcon.Rotation = 90
+
+    local nav = New("ScrollingFrame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(8,82),
+        Size = UDim2.new(1,-16,1,-94),
+        CanvasSize = UDim2.new(),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 0,
+        ZIndex = 13,
+        Parent = sidebar,
+    })
+
+    New("UIListLayout", {
+        Padding=UDim.new(0,7),
+        SortOrder=Enum.SortOrder.LayoutOrder,
+        Parent=nav
+    })
+
+    local status = New("Frame", {
+        BackgroundColor3 = Theme.Panel,
+        BackgroundTransparency = .58,
+        AnchorPoint = Vector2.new(0,1),
+        Position = UDim2.new(0,14,1,-8),
+        Size = UDim2.new(1,-28,0,30),
+        ClipsDescendants = true,
+        ZIndex = 30,
+        Parent = content,
+    })
+    Round(status,9)
+    Stroke(status,Theme.StrokeSoft,.76,1)
+    Glass(status,.52,.74)
+
+    local statusPulse = New("Frame", {
+        AnchorPoint=Vector2.new(.5,.5),
+        Position=UDim2.fromOffset(14,15),
+        Size=UDim2.fromOffset(8,8),
+        BackgroundColor3=Theme.Mint,
+        BackgroundTransparency=.70,
+        ZIndex=30,
+        Parent=status
+    })
+    Round(statusPulse,999)
+
+    local statusDot = New("Frame", {
+        Position=UDim2.fromOffset(10,11),
+        Size=UDim2.fromOffset(8,8),
+        BackgroundColor3=Theme.Mint,
+        ZIndex=31,
+        Parent=status
+    })
+    Round(statusDot,999)
+
+    if premiumMotion then
+        task.spawn(function()
+            while statusPulse.Parent do
+                statusPulse.Size = UDim2.fromOffset(8,8)
+                statusPulse.BackgroundTransparency = .58
+
+                Tween(
+                    statusPulse,
+                    1.7,
+                    {
+                        Size=UDim2.fromOffset(19,19),
+                        BackgroundTransparency=1
+                    },
+                    Enum.EasingStyle.Sine,
+                    Enum.EasingDirection.Out
+                ).Completed:Wait()
+
+                task.wait(.25)
+            end
+        end)
+    end
+
+    local statusText = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(27,0),
+        Size = UDim2.new(1,-34,1,0),
+        Font = Enum.Font.GothamMedium,
+        Text = "READY",
+        TextColor3 = Theme.TextSoft,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 31,
+        Parent = status,
+    })
+
+    local pageHolder = New("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(14,9),
+        Size = UDim2.new(1,-28,1,-50),
+        ClipsDescendants = true,
+        ZIndex = 13,
+        Parent = content,
+    })
+
+    local pages, navItems, current = {}, {}, nil
+    local pageOrder = 0
+    local sidebarOpenState = true
+
+    Window = {
+        Theme = Theme,
+        Gui = gui,
+        Main = main,
+        Items = {},
+        Pages = pages,
+        Width = width,
+        Height = height,
+        Connections = {},
+        Cleanups = {},
+        Destroyed = false,
+
+        -- V12 shared metadata.
+        DiscordInvite = discordInvite,
+        Player = player,
+        ProfileChip = profileChip,
+        GameIcon = getGameIcon(game.GameId),
+        PremiumMotion = premiumMotion,
+    }
+
+    Library._ConnectionSink = Window.Connections
+
+    function Window:TrackCleanup(fn)
+        if type(fn) == "function" then
+            table.insert(Window.Cleanups, fn)
+        end
+        return fn
+    end
+
+    --------------------------------------------------------------------
+    -- GLOBAL SEARCH
+    -- Manifest entries are registered once while the UI is built. Search
+    -- never scans the live hierarchy, so it stays responsive on large games.
+    --------------------------------------------------------------------
+
+    Window.SearchEntries = {}
+
+    local searchBackdrop = New("TextButton", {
+        BackgroundColor3 = Theme.BG,
+        BackgroundTransparency = .72,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(0,62),
+        Size = UDim2.new(1,0,1,-62),
+        Text = "",
+        AutoButtonColor = false,
+        Visible = false,
+        ZIndex = 38,
+        Parent = main,
+    })
+
+    local searchPanel = New("Frame", {
+        AnchorPoint = Vector2.new(1,0),
+        Position = UDim2.new(1,-16,0,68),
+        Size = UDim2.fromOffset(430,366),
+        BackgroundColor3 = Theme.Panel,
+        BackgroundTransparency = .08,
+        BorderSizePixel = 0,
+        Visible = false,
+        ZIndex = 40,
+        Parent = main,
+    })
+    Round(searchPanel,14)
+    Stroke(searchPanel,Theme.Cyan,.42,1)
+    Glass(searchPanel,.20,.42)
+
+    local searchHeader = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(16,10),
+        Size = UDim2.new(1,-32,0,20),
+        Font = Enum.Font.GothamBold,
+        Text = "SEARCH SERENITY",
+        TextColor3 = Theme.Text,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 41,
+        Parent = searchPanel,
+    })
+
+    local searchField = New("Frame", {
+        Position = UDim2.fromOffset(14,38),
+        Size = UDim2.new(1,-28,0,42),
+        BackgroundColor3 = Theme.Panel2,
+        BackgroundTransparency = .34,
+        BorderSizePixel = 0,
+        ZIndex = 41,
+        Parent = searchPanel,
+    })
+    Round(searchField,10)
+    Stroke(searchField,Theme.StrokeSoft,.58,1)
+
+    Icon(searchField,"search",{
+        Position=UDim2.fromOffset(13,12),
+        Size=UDim2.fromOffset(18,18),
+        Color=Theme.Cyan,
+        ZIndex=42,
+    })
+
+    local searchBox = New("TextBox", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(40,0),
+        Size = UDim2.new(1,-50,1,0),
+        ClearTextOnFocus = false,
+        Font = Enum.Font.Gotham,
+        PlaceholderText = "Search pages, features, or settings...",
+        PlaceholderColor3 = Theme.TextDim,
+        Text = "",
+        TextColor3 = Theme.Text,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 42,
+        Parent = searchField,
+    })
+
+    local searchStatus = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(16,86),
+        Size = UDim2.new(1,-32,0,18),
+        Font = Enum.Font.Gotham,
+        Text = "Start typing to find anything.",
+        TextColor3 = Theme.TextDim,
+        TextSize = 9,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 41,
+        Parent = searchPanel,
+    })
+
+    local searchResults = New("ScrollingFrame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(12,110),
+        Size = UDim2.new(1,-24,1,-122),
+        CanvasSize = UDim2.new(),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = Theme.Cyan,
+        ZIndex = 41,
+        Parent = searchPanel,
+    })
+    New("UIListLayout", {
+        Padding = UDim.new(0,6),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = searchResults,
+    })
+
+    local function normalizeSearch(value)
+        return string.lower(tostring(value or ""))
+            :gsub("^%s+","")
+            :gsub("%s+$","")
+    end
+
+    local function resolveSearchTarget(target)
+        if typeof(target) == "Instance" then
+            return target
+        end
+        if type(target) == "table" then
+            if target.Primary ~= nil or target.Fallback ~= nil then
+                return resolveSearchTarget(target.Primary)
+                    or resolveSearchTarget(target.Fallback)
+            end
+            return target.Row or target.Frame or target.Button
+                or target.Content or target._Row or target._Frame
+        end
+        return nil
+    end
+
+    function Window:FocusSearchTarget(target)
+        local object = resolveSearchTarget(target)
+        if not object or not object.Parent or not object:IsA("GuiObject") then
+            return
+        end
+
+        local scroller = object.Parent
+        while scroller and scroller ~= main and not scroller:IsA("ScrollingFrame") do
+            scroller = scroller.Parent
+        end
+
+        if scroller and scroller:IsA("ScrollingFrame") then
+            local y = object.AbsolutePosition.Y - scroller.AbsolutePosition.Y
+                + scroller.CanvasPosition.Y - 10
+            scroller.CanvasPosition = Vector2.new(
+                scroller.CanvasPosition.X,
+                math.max(0,y)
+            )
+        end
+
+        local old = object:FindFirstChild("SerenitySearchFocus")
+        if old then old:Destroy() end
+        local focusStroke = New("UIStroke", {
+            Name = "SerenitySearchFocus",
+            Color = Theme.Cyan,
+            Transparency = .05,
+            Thickness = 2,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Parent = object,
+        })
+        task.delay(1.35,function()
+            if focusStroke.Parent then
+                Tween(focusStroke,.25,{Transparency=1}).Completed:Wait()
+                focusStroke:Destroy()
+            end
+        end)
+    end
+
+    local function clearSearchResults()
+        for _,child in ipairs(searchResults:GetChildren()) do
+            if child:IsA("GuiButton") then
+                child:Destroy()
+            end
+        end
+    end
+
+    local function scoreSearchEntry(entry, query)
+        if query == "" then
+            return entry.Kind == "Page" and 30 or entry.Kind == "Feature" and 20 or 10
+        end
+
+        local title = normalizeSearch(entry.Title)
+        local feature = normalizeSearch(entry.Feature)
+        local page = normalizeSearch(entry.Page)
+        local description = normalizeSearch(entry.Description)
+        local kind = normalizeSearch(entry.Kind)
+        local score = 0
+
+        if title == query then score += 140
+        elseif string.sub(title,1,#query) == query then score += 105
+        elseif string.find(title,query,1,true) then score += 80 end
+        if string.find(feature,query,1,true) then score += 48 end
+        if string.find(page,query,1,true) then score += 36 end
+        if string.find(description,query,1,true) then score += 24 end
+        if string.find(kind,query,1,true) then score += 12 end
+
+        for token in string.gmatch(query,"%S+") do
+            local haystack = table.concat({title,feature,page,description,kind}," ")
+            if not string.find(haystack,token,1,true) then
+                return 0
+            end
+            score += 4
+        end
+
+        return score
+    end
+
+    local function renderSearch()
+        clearSearchResults()
+        local query = normalizeSearch(searchBox.Text)
+        local matches = {}
+
+        for _,entry in ipairs(Window.SearchEntries) do
+            local score = scoreSearchEntry(entry,query)
+            if score > 0 then
+                matches[#matches+1] = {Entry=entry,Score=score}
+            end
+        end
+
+        table.sort(matches,function(a,b)
+            if a.Score == b.Score then
+                return tostring(a.Entry.Title) < tostring(b.Entry.Title)
+            end
+            return a.Score > b.Score
+        end)
+
+        local shown = math.min(#matches,18)
+        searchStatus.Text = query == ""
+            and ("Browse %d searchable items or start typing."):format(#matches)
+            or ("%d result%s"):format(#matches,#matches == 1 and "" or "s")
+
+        if shown == 0 then
+            searchStatus.Text = "No matching page, feature, or setting."
+            return
+        end
+
+        for index = 1,shown do
+            local entry = matches[index].Entry
+            local result = New("TextButton", {
+                LayoutOrder = index,
+                AutoButtonColor = false,
+                BackgroundColor3 = Theme.Panel2,
+                BackgroundTransparency = .48,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1,-4,0,50),
+                Text = "",
+                ZIndex = 42,
+                Parent = searchResults,
+            })
+            Round(result,10)
+            local resultStroke = Stroke(result,Theme.StrokeSoft,.76,1)
+
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(12,5),
+                Size = UDim2.new(1,-24,0,19),
+                Font = Enum.Font.GothamMedium,
+                Text = tostring(entry.Title or "Untitled"),
+                TextColor3 = Theme.Text,
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ZIndex = 43,
+                Parent = result,
+            })
+
+            local trail = {}
+            if entry.Page then trail[#trail+1] = entry.Page end
+            if entry.Feature and entry.Feature ~= entry.Title then
+                trail[#trail+1] = entry.Feature
+            end
+            trail[#trail+1] = entry.Kind or "Item"
+
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(12,25),
+                Size = UDim2.new(1,-24,0,16),
+                Font = Enum.Font.Gotham,
+                Text = table.concat(trail,"  ›  "),
+                TextColor3 = Theme.TextDim,
+                TextSize = 9,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ZIndex = 43,
+                Parent = result,
+            })
+
+            result.MouseEnter:Connect(function()
+                Tween(result,.10,{BackgroundTransparency=.26})
+                Tween(resultStroke,.10,{Color=Theme.Cyan,Transparency=.42})
+            end)
+            result.MouseLeave:Connect(function()
+                Tween(result,.10,{BackgroundTransparency=.48})
+                Tween(resultStroke,.10,{Color=Theme.StrokeSoft,Transparency=.76})
+            end)
+            result.MouseButton1Click:Connect(function()
+                Window:CloseSearch()
+                if type(entry.Activate) == "function" then
+                    entry.Activate()
+                end
+            end)
+        end
+    end
+
+    function Window:RegisterSearchEntry(entry)
+        if type(entry) == "table" and entry.Title then
+            table.insert(Window.SearchEntries,entry)
+            if searchPanel.Visible then renderSearch() end
+        end
+    end
+
+    function Window:OpenSearch()
+        if Window.Destroyed then return end
+        if Window._OpenPicker and type(Window._OpenPicker.Close) == "function" then
+            Window._OpenPicker:Close()
+        end
+        searchBackdrop.Visible = true
+        searchPanel.Visible = true
+        renderSearch()
+        task.defer(function()
+            if searchBox.Parent then searchBox:CaptureFocus() end
+        end)
+    end
+
+    function Window:CloseSearch()
+        searchBox:ReleaseFocus()
+        searchPanel.Visible = false
+        searchBackdrop.Visible = false
+    end
+
+    function Window:ToggleSearch()
+        if searchPanel.Visible then Window:CloseSearch() else Window:OpenSearch() end
+    end
+
+    searchBackdrop.MouseButton1Click:Connect(function()
+        Window:CloseSearch()
+    end)
+    searchBox:GetPropertyChangedSignal("Text"):Connect(renderSearch)
+    Track(UserInputService.InputBegan:Connect(function(input,gameProcessed)
+        if input.KeyCode == Enum.KeyCode.Escape and searchPanel.Visible then
+            Window:CloseSearch()
+            return
+        end
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.K
+            and (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+                or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
+            Window:ToggleSearch()
+        end
+    end))
+
+    --------------------------------------------------------------------
+    -- EXISTING V11 PAGE API
+    --------------------------------------------------------------------
+
+    function Window:AddPage(name, iconName)
+        pageOrder += 1
+
+        local page = New("CanvasGroup", {
+            Name=name,
+            BackgroundTransparency=1,
+            Size=UDim2.fromScale(1,1),
+            Position=UDim2.fromOffset(0,0),
+            GroupTransparency=0,
+            Visible=false,
+            ZIndex=14,
+            Parent=pageHolder
+        })
+
+        pages[name] = page
+
+        local tab = New("Frame", {
+            LayoutOrder = pageOrder,
+            BackgroundColor3 = Theme.Panel2,
+            BackgroundTransparency = .90,
+            Size = UDim2.new(1,0,0,44),
+            ClipsDescendants = true,
+            ZIndex = 14,
+            Parent = nav,
+        })
+        Round(tab,12)
+
+        local tabStroke = Stroke(tab,Theme.StrokeSoft,1,1)
+        Glass(tab,.56,.84)
+
+        local rail = New("Frame", {
+            BackgroundColor3=Theme.Cyan,
+            BackgroundTransparency=1,
+            Position=UDim2.new(0,4,.5,-11),
+            Size=UDim2.fromOffset(3,22),
+            ZIndex=15,
+            Parent=tab
+        })
+        Round(rail,999)
+
+        local image = Icon(tab,iconName or name,{
+            Position=UDim2.fromOffset(16,14),
+            Size=UDim2.fromOffset(16,16),
+            ZIndex=16
+        })
+
+        local label = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(47,0),
+            Size = UDim2.new(1,-54,1,0),
+            Font = Enum.Font.GothamMedium,
+            Text = name,
+            TextColor3 = Theme.TextSoft,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 16,
+            Parent = tab,
+        })
+
+        local hit = Overlay(tab,function()
+            Window:SwitchPage(name)
+        end)
+
+        hit.MouseEnter:Connect(function()
+            if current ~= name then
+                Tween(tab,.12,{BackgroundTransparency=.76})
+            end
+        end)
+
+        hit.MouseLeave:Connect(function()
+            if current ~= name then
+                Tween(tab,.12,{BackgroundTransparency=.90})
+            end
+        end)
+
+        navItems[name] = {
+            Row=tab,
+            Stroke=tabStroke,
+            Line=rail,
+            Icon=image,

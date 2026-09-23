@@ -1,0 +1,310 @@
+ local main=New("Frame",{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(W,H),BorderSizePixel=0,ClipsDescendants=true,ZIndex=10,Parent=g});bind(main,"BackgroundColor3","BG");shellGlass(main);Round(main,14);local mainStroke=Stroke(main,T.A1,.55);bind(mainStroke,"Color","A1")
+ task.spawn(function()
+  while mainStroke.Parent and not X.Destroyed do
+   Tw(mainStroke,2.8,{Transparency=.38}).Completed:Wait()
+   if not mainStroke.Parent then break end
+   Tw(mainStroke,2.8,{Transparency=.64}).Completed:Wait()
+  end
+ end)
+ local sc=New("UIScale",{Scale=1,Parent=main});local function rs()local c=workspace.CurrentCamera;if c then local v=c.ViewportSize;sc.Scale=math.min(1,(v.X-24)/W,(v.Y-24)/H)end end;rs();if workspace.CurrentCamera then X.Connections[#X.Connections+1]=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(rs)end
+ local top=New("Frame",{Size=UDim2.new(1,0,0,50),BorderSizePixel=0,ZIndex=12,Parent=main});bind(top,"BackgroundColor3","Top");shellGlass(top)
+ New("ImageLabel",{BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(40,40),Image=LOGO,ScaleType=Enum.ScaleType.Fit,ZIndex=14,Parent=top})
+ local ttl=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(12,0),Size=UDim2.fromOffset(150,50),Font=Enum.Font.GothamBold,Text="SERENITY HUB",TextSize=17,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14,Parent=top});bind(ttl,"TextColor3","Text")
+ local line=New("Frame",{Position=UDim2.new(0,0,1,-1),Size=UDim2.new(1,0,0,1),BorderSizePixel=0,ZIndex=14,Parent=top});bind(line,"BackgroundColor3","A2")
+ local lineGradient=New("UIGradient",{Color=ColorSequence.new({ColorSequenceKeypoint.new(0,T.A2),ColorSequenceKeypoint.new(.5,T.A1),ColorSequenceKeypoint.new(1,T.A3)}),Offset=Vector2.new(-1,0),Parent=line})
+ task.spawn(function()
+  while lineGradient.Parent and not X.Destroyed do
+   lineGradient.Offset=Vector2.new(-1,0)
+   Tw(lineGradient,4.6,{Offset=Vector2.new(1,0)}).Completed:Wait()
+   task.wait(1.1)
+  end
+ end)
+ X.ThemeRefreshers[#X.ThemeRefreshers+1]=function()
+  if lineGradient.Parent then
+   lineGradient.Color=ColorSequence.new({
+    ColorSequenceKeypoint.new(0,T.A2),
+    ColorSequenceKeypoint.new(.5,T.A1),
+    ColorSequenceKeypoint.new(1,T.A3)
+   })
+  end
+ end
+ local pr=New("Frame",{AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-84,.5,0),Size=UDim2.fromOffset(150,34),BorderSizePixel=0,ZIndex=15,Parent=top});bind(pr,"BackgroundColor3","Panel");shellGlass(pr);Round(pr,10);bind(Stroke(pr,T.Stroke,.75),"Color","Stroke")
+ local av=New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(4,3),Size=UDim2.fromOffset(28,28),Image="",ZIndex=16,Parent=pr});Round(av,999);task.spawn(function()av.Image=Avatar()end)
+ local online=New("Frame",{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(31,29),Size=UDim2.fromOffset(6,6),BorderSizePixel=0,ZIndex=18,Parent=pr});bind(online,"BackgroundColor3","A1");Round(online,999)
+ local pn=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(38,3),Size=UDim2.new(1,-43,0,15),Font=Enum.Font.GothamMedium,Text=LP.DisplayName,TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=pr});bind(pn,"TextColor3","Text")
+ local pu=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(38,17),Size=UDim2.new(1,-43,0,13),Font=Enum.Font.Gotham,Text="@"..LP.Name,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=pr});bind(pu,"TextColor3","Dim")
+ local function tb(txt,x,fn)local b=New("TextButton",{AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,x,.5,0),Size=UDim2.fromOffset(30,30),AutoButtonColor=false,BorderSizePixel=0,Font=Enum.Font.GothamBold,Text=txt=="Search"and""or txt,TextSize=10,ZIndex=16,Parent=top});bind(b,"BackgroundColor3","Panel2");bind(b,"TextColor3","Soft");Round(b,8);if txt=="Search"then local i=New("ImageLabel",{BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(15,15),Image=Icons.Search,ZIndex=17,Parent=b});bind(i,"ImageColor3","Soft")end;b.MouseButton1Click:Connect(fn);return b end
+ local body=New("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(0,50),Size=UDim2.new(1,0,1,-50),Parent=main})
+ local side=New("Frame",{Size=UDim2.new(0,164,1,0),BorderSizePixel=0,ZIndex=12,Parent=body});bind(side,"BackgroundColor3","Side");shellGlass(side)
+ New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(10,8),Size=UDim2.fromOffset(34,34),Image=LOGO,ScaleType=Enum.ScaleType.Fit,ZIndex=14,Parent=side})
+ local st=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(47,7),Size=UDim2.new(1,-50,0,34),Font=Enum.Font.GothamBold,Text="SERENITY HUB",TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14,Parent=side});bind(st,"TextColor3","Text")
+ local nav=New("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(7,50),Size=UDim2.new(1,-14,1,-86),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=0,ZIndex=13,Parent=side});New("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=nav})
+ local foot=New("Frame",{AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,7,1,-6),Size=UDim2.new(1,-14,0,26),BorderSizePixel=0,ZIndex=13,Parent=side});bind(foot,"BackgroundColor3","Panel");shellGlass(foot);Round(foot,8)
+ local pulse=New("Frame",{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(11.5,12.5),Size=UDim2.fromOffset(7,7),BorderSizePixel=0,BackgroundTransparency=.55,ZIndex=13,Parent=foot});bind(pulse,"BackgroundColor3","A1");Round(pulse,999)
+ local fd=New("Frame",{Position=UDim2.fromOffset(8,9),Size=UDim2.fromOffset(7,7),BorderSizePixel=0,ZIndex=14,Parent=foot});bind(fd,"BackgroundColor3","A1");Round(fd,999)
+ task.spawn(function()
+  while pulse.Parent and not X.Destroyed do
+   pulse.Size=UDim2.fromOffset(7,7);pulse.BackgroundTransparency=.55
+   Tw(pulse,1.45,{Size=UDim2.fromOffset(18,18),BackgroundTransparency=1}).Completed:Wait()
+   task.wait(.25)
+  end
+ end)
+ local ft=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(21,0),Size=UDim2.new(1,-25,1,0),Font=Enum.Font.GothamMedium,Text="READY",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14,Parent=foot});bind(ft,"TextColor3","Soft")
+ local cont=New("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(164,0),Size=UDim2.new(1,-164,1,0),Parent=body})
+ local ptitle=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(12,5),Size=UDim2.new(1,-24,0,25),Font=Enum.Font.GothamBold,Text="Dashboard",TextSize=15,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14,Parent=cont});bind(ptitle,"TextColor3","Text")
+ local ph=New("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,34),Size=UDim2.new(1,-18,1,-40),ClipsDescendants=true,ZIndex=13,Parent=cont})
+ -- RC1.2 PERMANENT SERENITY ORB
+ -- Always visible whether the main UI is open or hidden.
+ local launcher=New("TextButton",{BackgroundTransparency=.12,BorderSizePixel=0,Position=UDim2.new(0,20,.5,-28),Size=UDim2.fromOffset(56,56),Text="",Visible=true,ZIndex=30,Parent=g});bind(launcher,"BackgroundColor3","Panel");shellGlass(launcher);Round(launcher,999);bind(Stroke(launcher,T.A1,.4),"Color","A1");New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(7,7),Size=UDim2.fromOffset(42,42),Image=LOGO,ScaleType=Enum.ScaleType.Fit,ZIndex=31,Parent=launcher})
+
+ local launcherPointerDown=false
+ local launcherDragStart=nil
+ local launcherDragged=false
+
+ launcher.InputBegan:Connect(function(input)
+  if input.UserInputType==Enum.UserInputType.MouseButton1
+   or input.UserInputType==Enum.UserInputType.Touch then
+   launcherPointerDown=true
+   launcherDragged=false
+   launcherDragStart=input.Position
+  end
+ end)
+
+ X.Connections[#X.Connections+1]=UserInputService.InputChanged:Connect(function(input)
+  if launcherPointerDown and launcherDragStart
+   and (input.UserInputType==Enum.UserInputType.MouseMovement
+    or input.UserInputType==Enum.UserInputType.Touch) then
+   if (input.Position-launcherDragStart).Magnitude>=7 then
+    launcherDragged=true
+   end
+  end
+ end)
+
+ X.Connections[#X.Connections+1]=UserInputService.InputEnded:Connect(function(input)
+  if input.UserInputType==Enum.UserInputType.MouseButton1
+   or input.UserInputType==Enum.UserInputType.Touch then
+   launcherPointerDown=false
+   launcherDragStart=nil
+  end
+ end)
+
+ function X:IsOpen()
+  return main.Visible
+ end
+
+ function X:Minimize()
+  X:CloseActivePopup()
+  main.Visible=false
+  launcher.Visible=true
+ end
+
+ function X:Restore()
+  launcher.Visible=true
+  main.Visible=true
+ end
+
+ function X:ToggleVisibility()
+  if X:IsOpen() then
+   X:Minimize()
+  else
+   X:Restore()
+  end
+ end
+
+ launcher.MouseButton1Click:Connect(function()
+  if launcherDragged then
+   launcherDragged=false
+   return
+  end
+
+  X:ToggleVisibility()
+ end)
+
+ Drag(top,main)
+ Drag(launcher,launcher)
+ function X:Destroy()if X.Destroyed then return end;X.Destroyed=true;for _,c in ipairs(X.Connections)do pcall(function()c:Disconnect()end)end;for _,f in ipairs(X.Cleanups)do pcall(f)end;pcall(function()RunService:Set3dRenderingEnabled(true)end);save();if g then g:Destroy()end; end
+ tb("Search",-242,function()X:ToggleSearch()end);tb("—",-44,function()X:Minimize()end);tb("X",-9,function()X:Destroy()end)
+ X._theme=T;X._bind=bind;X._shellGlass=shellGlass;X._featureGlass=featureGlass;X._controlGlass=controlGlass;X._ak=ak;X._applyGlass=applyGlass;X._main=main;X._nav=nav;X._pageHolder=ph;X._pageTitle=ptitle;X._cover=cover;X._saveLater=later;X._save=save
+
+ -- GLOBAL SEARCH ------------------------------------------------------
+ -- Entries come from the manifest once; no live hierarchy scanning.
+ X.SearchEntries={}
+ local searchShade=New("TextButton",{BackgroundTransparency=.72,BorderSizePixel=0,Position=UDim2.fromOffset(0,50),Size=UDim2.new(1,0,1,-50),Text="",AutoButtonColor=false,Visible=false,ZIndex=38,Parent=main});bind(searchShade,"BackgroundColor3","BG")
+ local searchPanel=New("Frame",{AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-8,0,56),Size=UDim2.fromOffset(410,350),BackgroundTransparency=.08,BorderSizePixel=0,Visible=false,ZIndex=40,Parent=main});bind(searchPanel,"BackgroundColor3","Panel");shellGlass(searchPanel);Round(searchPanel,12);local searchPanelStroke=Stroke(searchPanel,T.A2,.38);bind(searchPanelStroke,"Color","A2")
+ local searchTitle=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(13,8),Size=UDim2.new(1,-26,0,18),Font=Enum.Font.GothamBold,Text="SEARCH SERENITY",TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=41,Parent=searchPanel});bind(searchTitle,"TextColor3","Text")
+ local searchField=New("Frame",{Position=UDim2.fromOffset(11,32),Size=UDim2.new(1,-22,0,38),BackgroundTransparency=.30,BorderSizePixel=0,ZIndex=41,Parent=searchPanel});bind(searchField,"BackgroundColor3","Panel2");Round(searchField,9);local searchFieldStroke=Stroke(searchField,T.Stroke,.58);bind(searchFieldStroke,"Color","Stroke")
+ local searchGlyph=New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(11,11),Size=UDim2.fromOffset(16,16),Image=Icons.Search,ZIndex=42,Parent=searchField});bind(searchGlyph,"ImageColor3","A2")
+ local searchBox=New("TextBox",{BackgroundTransparency=1,Position=UDim2.fromOffset(35,0),Size=UDim2.new(1,-43,1,0),ClearTextOnFocus=false,Font=Enum.Font.Gotham,PlaceholderText="Search pages, features, or settings...",Text="",TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=42,Parent=searchField});bind(searchBox,"TextColor3","Text");bind(searchBox,"PlaceholderColor3","Dim")
+ local searchStatus=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(13,75),Size=UDim2.new(1,-26,0,16),Font=Enum.Font.Gotham,Text="Start typing to find anything.",TextSize=8,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=41,Parent=searchPanel});bind(searchStatus,"TextColor3","Dim")
+ local searchResults=New("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(9,96),Size=UDim2.new(1,-18,1,-104),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=2,ZIndex=41,Parent=searchPanel});bind(searchResults,"ScrollBarImageColor3","A2");New("UIListLayout",{Padding=UDim.new(0,5),SortOrder=Enum.SortOrder.LayoutOrder,Parent=searchResults})
+
+ local function searchNormalize(v)return string.lower(tostring(v or"")):gsub("^%s+",""):gsub("%s+$","")end
+ local function searchTarget(target)
+  if typeof(target)=="Instance"then return target end
+  if type(target)=="table"then if target.Primary~=nil or target.Fallback~=nil then return searchTarget(target.Primary)or searchTarget(target.Fallback)end;return target.Row or target.Frame or target.Button or target.Content or target._Row or target._Frame end
+ end
+
+ function X:FocusSearchTarget(target)
+  local object=searchTarget(target)
+  if not object or not object.Parent or not object:IsA("GuiObject")then return end
+  local scroller=object.Parent
+  while scroller and scroller~=main and not scroller:IsA("ScrollingFrame")do scroller=scroller.Parent end
+  if scroller and scroller:IsA("ScrollingFrame")then
+   local y=object.AbsolutePosition.Y-scroller.AbsolutePosition.Y+scroller.CanvasPosition.Y-8
+   scroller.CanvasPosition=Vector2.new(scroller.CanvasPosition.X,math.max(0,y))
+  end
+  local old=object:FindFirstChild("SerenitySearchFocus")if old then old:Destroy()end
+  local focus=New("UIStroke",{Name="SerenitySearchFocus",Color=T.A2,Transparency=.04,Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Parent=object})
+  task.delay(1.25,function()if focus.Parent then Tw(focus,.22,{Transparency=1}).Completed:Wait();focus:Destroy()end end)
+ end
+
+ local function clearSearch()
+  for _,child in ipairs(searchResults:GetChildren())do if child:IsA("GuiButton")then child:Destroy()end end
+ end
+
+ local function searchScore(entry,query)
+  if query==""then return entry.Kind=="Page"and 30 or entry.Kind=="Feature"and 20 or 10 end
+  local title=searchNormalize(entry.Title);local feature=searchNormalize(entry.Feature);local page=searchNormalize(entry.Page);local description=searchNormalize(entry.Description);local kind=searchNormalize(entry.Kind);local score=0
+  if title==query then score+=140 elseif string.sub(title,1,#query)==query then score+=105 elseif string.find(title,query,1,true)then score+=80 end
+  if string.find(feature,query,1,true)then score+=48 end;if string.find(page,query,1,true)then score+=36 end;if string.find(description,query,1,true)then score+=24 end;if string.find(kind,query,1,true)then score+=12 end
+  local haystack=table.concat({title,feature,page,description,kind}," ")
+  for token in string.gmatch(query,"%S+")do if not string.find(haystack,token,1,true)then return 0 end;score+=4 end
+  return score
+ end
+
+ local function renderSearch()
+  clearSearch();local query=searchNormalize(searchBox.Text);local matches={}
+  for _,entry in ipairs(X.SearchEntries)do local score=searchScore(entry,query)if score>0 then matches[#matches+1]={Entry=entry,Score=score}end end
+  table.sort(matches,function(a,b)if a.Score==b.Score then return tostring(a.Entry.Title)<tostring(b.Entry.Title)end return a.Score>b.Score end)
+  local shown=math.min(#matches,16);searchStatus.Text=query==""and("Browse %d searchable items or start typing."):format(#matches)or("%d result%s"):format(#matches,#matches==1 and""or"s")
+  if shown==0 then searchStatus.Text="No matching page, feature, or setting.";return end
+  for index=1,shown do
+   local entry=matches[index].Entry
+   local result=New("TextButton",{LayoutOrder=index,AutoButtonColor=false,BackgroundTransparency=.38,BorderSizePixel=0,Size=UDim2.new(1,-3,0,46),Text="",ZIndex=42,Parent=searchResults});bind(result,"BackgroundColor3","Panel2");Round(result,8);local rs=Stroke(result,T.Stroke,.76);bind(rs,"Color","Stroke")
+   local rt=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(10,4),Size=UDim2.new(1,-20,0,18),Font=Enum.Font.GothamMedium,Text=tostring(entry.Title or"Untitled"),TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=43,Parent=result});bind(rt,"TextColor3","Text")
+   local trail={}if entry.Page then trail[#trail+1]=entry.Page end;if entry.Feature and entry.Feature~=entry.Title then trail[#trail+1]=entry.Feature end;trail[#trail+1]=entry.Kind or"Item"
+   local rb=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(10,23),Size=UDim2.new(1,-20,0,14),Font=Enum.Font.Gotham,Text=table.concat(trail,"  >  "),TextSize=8,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=43,Parent=result});bind(rb,"TextColor3","Dim")
+   result.MouseEnter:Connect(function()Tw(result,.09,{BackgroundTransparency=.20});Tw(rs,.09,{Transparency=.40})end);result.MouseLeave:Connect(function()Tw(result,.09,{BackgroundTransparency=.38});Tw(rs,.09,{Transparency=.76})end)
+   result.MouseButton1Click:Connect(function()X:CloseSearch();if type(entry.Activate)=="function"then entry.Activate()end end)
+  end
+ end
+
+ function X:RegisterSearchEntry(entry)if type(entry)=="table"and entry.Title then X.SearchEntries[#X.SearchEntries+1]=entry;if searchPanel.Visible then renderSearch()end end end
+ function X:CopyDiscordInvite()local ok=CopyText(DISCORD);if type(X.Notify)=="function"then X:Notify("Discord",ok and"Invite copied to your clipboard."or"Clipboard unavailable.",ok)end;return ok end
+ function X:OpenSearch()if X.Destroyed then return end;if type(X.CloseActivePopup)=="function"then X:CloseActivePopup()end;searchShade.Visible=true;searchPanel.Visible=true;renderSearch();task.defer(function()if searchBox.Parent then searchBox:CaptureFocus()end end)end
+ function X:CloseSearch()searchBox:ReleaseFocus();searchPanel.Visible=false;searchShade.Visible=false end
+ function X:ToggleSearch()if searchPanel.Visible then X:CloseSearch()else X:OpenSearch()end end
+ searchShade.MouseButton1Click:Connect(function()X:CloseSearch()end);searchBox:GetPropertyChangedSignal("Text"):Connect(renderSearch)
+ X.Connections[#X.Connections+1]=UserInputService.InputBegan:Connect(function(input,gameProcessed)if input.KeyCode==Enum.KeyCode.Escape and searchPanel.Visible then X:CloseSearch();return end;if gameProcessed then return end;if input.KeyCode==Enum.KeyCode.K and(UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)or UserInputService:IsKeyDown(Enum.KeyCode.RightControl))then X:ToggleSearch()end end)
+
+
+ -- POPUP / OUTSIDE-CLICK MANAGER --------------------------------------
+ -- Select and MultiSelect use one shared popup manager.
+ -- Only one menu can be open at a time.
+ -- Clicking/tapping anywhere outside the active selector/menu closes it.
+ local function pointInside(guiObject,position)
+  if not guiObject or not guiObject.Parent or not guiObject.Visible then
+   return false
+  end
+
+  local pos=guiObject.AbsolutePosition
+  local size=guiObject.AbsoluteSize
+
+  return position.X>=pos.X
+   and position.X<=pos.X+size.X
+   and position.Y>=pos.Y
+   and position.Y<=pos.Y+size.Y
+ end
+
+ function X:ActivatePopup(item)
+  if X.ActivePopup and X.ActivePopup~=item then
+   pcall(function()
+    X.ActivePopup:Close(true)
+   end)
+  end
+
+  X.ActivePopup=item
+ end
+
+ function X:DeactivatePopup(item)
+  if X.ActivePopup==item then
+   X.ActivePopup=nil
+  end
+ end
+
+ function X:CloseActivePopup()
+  local active=X.ActivePopup
+
+  if active then
+   pcall(function()
+    active:Close(true)
+   end)
+  end
+
+  X.ActivePopup=nil
+ end
+
+ X.Connections[#X.Connections+1]=UserInputService.InputBegan:Connect(function(input)
+  if not X.ActivePopup then
+   return
+  end
+
+  if input.KeyCode==Enum.KeyCode.Escape then
+   X:CloseActivePopup()
+   return
+  end
+
+  if input.UserInputType~=Enum.UserInputType.MouseButton1
+   and input.UserInputType~=Enum.UserInputType.Touch then
+   return
+  end
+
+  local active=X.ActivePopup
+  local position=input.Position
+
+  -- Keep it open when interacting with its own selector or popup.
+  if pointInside(active._Selector,position)
+   or pointInside(active._Menu,position) then
+   return
+  end
+
+  -- Any click/tap elsewhere closes it, including the Roblox world.
+  X:CloseActivePopup()
+ end)
+
+ -- PAGE SYSTEM ---------------------------------------------------------
+ local navOrder=0
+ function X:AddPage(name,opts)
+  opts=opts or{};if X.Pages[name]then return X.Pages[name]end;navOrder+=1
+  local page=New("ScrollingFrame",{Name=name,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=3,ScrollBarImageTransparency=.3,Visible=false,ZIndex=14,Parent=ph});bind(page,"ScrollBarImageColor3","A2");New("UIPadding",{PaddingRight=UDim.new(0,3),PaddingBottom=UDim.new(0,6),Parent=page});New("UIListLayout",{Padding=UDim.new(0,5),SortOrder=Enum.SortOrder.LayoutOrder,Parent=page})
+  page:SetAttribute("AllowMultipleFeatures",opts.AllowMultipleFeatures==true)
+
+  local tab=New("TextButton",{AutoButtonColor=false,BackgroundTransparency=.68,BorderSizePixel=0,Size=UDim2.new(1,0,0,40),LayoutOrder=navOrder,Text="",ZIndex=14,Parent=nav});bind(tab,"BackgroundColor3","Panel2");Round(tab,9);local ts=Stroke(tab,T.Stroke,.82);bind(ts,"Color","Stroke")
+
+  local rail=New("Frame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(2,7),Size=UDim2.fromOffset(3,26),ZIndex=15,Parent=tab});bind(rail,"BackgroundColor3","A1");Round(rail,999)
+
+  local icon=New("ImageLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(10,10),Size=UDim2.fromOffset(20,20),Image=Icons[name] or Icons.Misc,ImageTransparency=.22,ZIndex=15,Parent=tab});bind(icon,"ImageColor3","Soft")
+
+  local label=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(39,0),Size=UDim2.new(1,-45,1,0),Font=Enum.Font.GothamMedium,Text=name,TextSize=11,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15,Parent=tab});bind(label,"TextColor3","Soft")
+
+  tab.MouseButton1Click:Connect(function()X:SwitchPage(name)end)
+  tab.MouseEnter:Connect(function()if X.CurrentPage~=name then Tw(tab,.1,{BackgroundTransparency=.48});Tw(icon,.1,{ImageTransparency=0})end end)
+  tab.MouseLeave:Connect(function()if X.CurrentPage~=name then Tw(tab,.1,{BackgroundTransparency=.68});Tw(icon,.1,{ImageTransparency=.18})end end)
+
+  X.Pages[name]=page
+  X.Nav[name]={Tab=tab,Stroke=ts,Rail=rail,Icon=icon,Label=label}
+  if not X.CurrentPage then X:SwitchPage(name)end
+  return page
+ end
+ function X:SwitchPage(name)
+  local page=X.Pages[name]if not page then return end
+  X:CloseActivePopup()
+  X.CurrentPage=name;ptitle.Text=name;X:SetConfig("LastPage",name)
+  for n,p in pairs(X.Pages)do p.Visible=n==name end
+  for n,d in pairs(X.Nav)do
+   local active=n==name
+   Tw(d.Tab,.12,{BackgroundTransparency=active and .18 or .68})
+   Tw(d.Rail,.12,{BackgroundTransparency=active and 0 or 1})
+   Tw(d.Icon,.12,{ImageTransparency=active and 0 or .18})
+   d.Icon.ImageColor3=active and T.A2 or T.Soft
+   d.Label.TextColor3=active and T.Text or T.Soft

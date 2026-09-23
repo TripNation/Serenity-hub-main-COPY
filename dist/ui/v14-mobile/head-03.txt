@@ -1,0 +1,41 @@
+ function X:SetConfig(k,v,silent)C[k]=v;if not silent then later()end end
+ function X:SaveConfig()return save()end
+ local function bind(o,prop,key)X.Binds[#X.Binds+1]={o,prop,key};pcall(function()o[prop]=T[key]end)return o end
+ local function shellGlass(o)X.ShellGlass[#X.ShellGlass+1]=o;return o end
+ local function featureGlass(o)X.FeatureGlass[#X.FeatureGlass+1]=o;return o end
+ local function controlGlass(o)X.ControlGlass[#X.ControlGlass+1]=o;return o end
+ local function ak(n)n=string.lower(tostring(n or"a1"));if n=="cyan"or n=="a2"then return"A2"elseif n=="purple"or n=="lavender"or n=="a3"then return"A3"elseif n=="warning"or n=="gold"then return"Warn"elseif n=="danger"or n=="red"then return"Danger"end return"A1"end
+ function X:SetTheme(name,silent)local nt=Presets[name]if not nt then return false end;T=nt;X.ThemeName=name;for _,b in ipairs(X.Binds)do if b[1]and b[1].Parent and nt[b[3]]then pcall(function()Tw(b[1],.16,{[b[2]]=nt[b[3]]})end)end end;for _,refresh in ipairs(X.ThemeRefreshers)do pcall(refresh)end;X:SetConfig("Theme",name,silent)return true end
+ local function applyGlass()
+  local style=C.BackgroundStyle or"Glass"
+
+  local shell=math.clamp(tonumber(C.ShellTransparency) or 14,4,38)/100
+  local feature=math.clamp(tonumber(C.FeatureTransparency) or 48,28,78)/100
+  local control=math.clamp(tonumber(C.ControlTransparency) or 34,18,62)/100
+
+  if style=="Solid" then
+   shell=math.min(shell,.06)
+   feature=math.min(feature,.20)
+   control=math.min(control,.16)
+  elseif style=="Extra Glass" then
+   shell=math.min(.44,shell+.10)
+   feature=math.min(.82,feature+.14)
+   control=math.min(.68,control+.10)
+  end
+
+  for _,o in ipairs(X.ShellGlass)do
+   if o and o.Parent then Tw(o,.14,{BackgroundTransparency=shell})end
+  end
+
+  for _,o in ipairs(X.FeatureGlass)do
+   if o and o.Parent then Tw(o,.14,{BackgroundTransparency=feature})end
+  end
+
+  for _,o in ipairs(X.ControlGlass)do
+   if o and o.Parent then Tw(o,.14,{BackgroundTransparency=control})end
+  end
+ end
+ X.ApplyBackgroundStyle=applyGlass
+
+ local g=New("ScreenGui",{Name="SerenityHubV14Test",IgnoreGuiInset=true,ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Parent=ParentGui()});X.Gui=g
+ local cover=New("Frame",{BackgroundColor3=Color3.new(),Size=UDim2.fromScale(1,1),BorderSizePixel=0,Visible=false,ZIndex=2,Parent=g});X.Cover=cover

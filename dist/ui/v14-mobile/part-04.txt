@@ -1,0 +1,165 @@
+  local menu=New("Frame",{LayoutOrder=2,BackgroundTransparency=.10,BorderSizePixel=0,Size=UDim2.new(1,0,0,0),Visible=false,ClipsDescendants=true,ZIndex=20,Parent=holder});bind(menu,"BackgroundColor3","Panel2");Round(menu,8);local ms=Stroke(menu,T[ac],.52);bind(ms,"Color",ac)
+  local search=New("TextBox",{BackgroundTransparency=.42,BorderSizePixel=0,Position=UDim2.fromOffset(5,5),Size=UDim2.new(1,-102,0,30),Font=Enum.Font.Gotham,PlaceholderText="Search",Text="",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ClearTextOnFocus=false,ZIndex=21,Parent=menu});bind(search,"BackgroundColor3","Panel3");bind(search,"TextColor3","Text");bind(search,"PlaceholderColor3","Dim");Round(search,6);New("UIPadding",{PaddingLeft=UDim.new(0,7),PaddingRight=UDim.new(0,7),Parent=search})
+  local all=New("TextButton",{AutoButtonColor=false,BackgroundTransparency=.56,BorderSizePixel=0,Position=UDim2.new(1,-92,0,5),Size=UDim2.fromOffset(40,30),Font=Enum.Font.GothamMedium,Text="ALL",TextSize=9,ZIndex=21,Parent=menu});bind(all,"BackgroundColor3",ac);bind(all,"TextColor3",ac);Round(all,6)
+  local clear=New("TextButton",{AutoButtonColor=false,BackgroundTransparency=.42,BorderSizePixel=0,Position=UDim2.new(1,-47,0,5),Size=UDim2.fromOffset(42,30),Font=Enum.Font.GothamMedium,Text="CLEAR",TextSize=9,ZIndex=21,Parent=menu});bind(clear,"BackgroundColor3","Panel3");bind(clear,"TextColor3","Soft");Round(clear,6)
+  local list=New("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(5,38),Size=UDim2.new(1,-10,1,-43),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=2,ZIndex=21,Parent=menu});bind(list,"ScrollBarImageColor3",ac);New("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=list})
+  local rows={};local open=false;local item={_Selector=sel,_Menu=menu}
+  local function get()local o={}for _,v in ipairs(values)do if selected[tostring(v)]then o[#o+1]=v end end return o end
+  local function summary()local a=get();if #a==0 then return opts.EmptyMeansAll and(opts.EmptyText or"All")or(opts.EmptyText or"Select Options")end;if #a==#values then return"All"end;local out={};local len=0;local lim=opts.SummaryCharacters or 23;for _,v in ipairs(a)do local s=tostring(v);if #out>0 and len+#s+2>lim then out[#out+1]="+"..tostring(#a-#out);break end;out[#out+1]=s;len+=#s+(#out>1 and 2 or 0)end;return table.concat(out,", ")end
+  local function refresh()
+   sel.Text=summary()
+
+   for k,d in pairs(rows)do
+    local on=selected[k]==true
+
+    d.Row.BackgroundTransparency=on and .38 or .78
+    d.Mark.Text=on and"ON"or""
+    d.Rail.BackgroundTransparency=on and 0 or 1
+   end
+  end
+  local function emit(silent)refresh();local a=get();if key then X:SetConfig(key,a,silent)end;if not silent and cb then task.spawn(cb,a)end end
+  local function rebuild()
+   for _,o in ipairs(list:GetChildren())do
+    if o:IsA("TextButton")then
+     o:Destroy()
+    end
+   end
+
+   table.clear(rows)
+
+   for i,v in ipairs(values)do
+    local k=tostring(v)
+
+    local o=New("TextButton",{
+     AutoButtonColor=false,
+     BackgroundTransparency=.78,
+     BorderSizePixel=0,
+     Size=UDim2.new(1,-2,0,30),
+     LayoutOrder=i,
+     Text="",
+     ZIndex=22,
+     Parent=list
+    })
+    bind(o,"BackgroundColor3","Panel3")
+    Round(o,7)
+
+    local selectedRail=New("Frame",{
+     BackgroundTransparency=1,
+     BorderSizePixel=0,
+     Position=UDim2.fromOffset(0,5),
+     Size=UDim2.fromOffset(2,20),
+     ZIndex=23,
+     Parent=o
+    })
+    bind(selectedRail,"BackgroundColor3",ac)
+    Round(selectedRail,999)
+
+    local lab=New("TextLabel",{
+     BackgroundTransparency=1,
+     Position=UDim2.fromOffset(10,0),
+     Size=UDim2.new(1,-52,1,0),
+     Font=Enum.Font.GothamMedium,
+     Text=k,
+     TextSize=10,
+     TextXAlignment=Enum.TextXAlignment.Left,
+     TextTruncate=Enum.TextTruncate.AtEnd,
+     ZIndex=23,
+     Parent=o
+    })
+    bind(lab,"TextColor3","Soft")
+
+    local mark=New("TextLabel",{
+     BackgroundTransparency=1,
+     AnchorPoint=Vector2.new(1,0),
+     Position=UDim2.new(1,-8,0,0),
+     Size=UDim2.fromOffset(30,30),
+     Font=Enum.Font.GothamBold,
+     Text="",
+     TextSize=8,
+     TextXAlignment=Enum.TextXAlignment.Right,
+     ZIndex=23,
+     Parent=o
+    })
+    bind(mark,"TextColor3",ac)
+
+    rows[k]={
+     Row=o,
+     Mark=mark,
+     Rail=selectedRail
+    }
+
+    o.MouseButton1Click:Connect(function()
+     selected[k]=not selected[k]
+
+     if not selected[k]then
+      selected[k]=nil
+     end
+
+     emit(false)
+    end)
+   end
+
+   refresh()
+  end search:GetPropertyChangedSignal("Text"):Connect(function()local q=string.lower(search.Text or"");for k,d in pairs(rows)do d.Row.Visible=q==""or string.find(string.lower(k),q,1,true)~=nil end end)
+  function item:Open()
+   if open then return end
+
+   X:ActivatePopup(item)
+   open=true
+   menu.Visible=true
+   menu.Size=UDim2.new(1,0,0,43+math.min(#values,6)*33)
+  end
+
+  function item:Close(fromManager)
+   if search:IsFocused() then
+    pcall(function()
+     search:ReleaseFocus()
+    end)
+   end
+
+   if not open then
+    if not fromManager then X:DeactivatePopup(item)end
+    return
+   end
+
+   open=false
+   menu.Visible=false
+   menu.Size=UDim2.new(1,0,0,0)
+   search.Text=""
+
+   if not fromManager then
+    X:DeactivatePopup(item)
+   elseif X.ActivePopup==item then
+    X.ActivePopup=nil
+   end
+  end
+
+  function item:Get()
+   return get()
+  end
+  function item:Set(a,silent)selected=SelectionSet(a);emit(silent)end;function item:SetOptions(a,preserve)local old=preserve and SelectionSet(get())or{};values=CopyArray(a);selected={};if preserve then for _,v in ipairs(values)do if old[tostring(v)]then selected[tostring(v)]=true end end end;rebuild()end
+  sel.MouseButton1Click:Connect(function()if open then item:Close()else item:Open()end end);all.MouseButton1Click:Connect(function()selected={};for _,v in ipairs(values)do selected[tostring(v)]=true end;emit(false)end);clear.MouseButton1Click:Connect(function()selected={};emit(false)end);rebuild();if key then X.Items[key]=item end;return item
+ end
+
+ function X:Slider(parent,key,title,desc,min,max,default,cb,opts)
+  opts=opts or{};local r=row(parent,56);local ac=ak(opts.Accent);local v=math.clamp(tonumber(default)or min,min,max)
+  local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,4),Size=UDim2.new(1,-78,0,18),Font=Enum.Font.GothamMedium,Text=title,TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local val=New("TextLabel",{BackgroundTransparency=1,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-9,0,4),Size=UDim2.fromOffset(65,18),Font=Enum.Font.GothamMedium,Text="",TextSize=9,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=18,Parent=r});bind(val,"TextColor3",ac);local d=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,21),Size=UDim2.new(1,-18,0,14),Font=Enum.Font.Gotham,Text=desc or"",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=18,Parent=r});bind(d,"TextColor3","Dim")
+  local bar=New("Frame",{Position=UDim2.fromOffset(9,42),Size=UDim2.new(1,-18,0,6),BorderSizePixel=0,ZIndex=18,Parent=r});bind(bar,"BackgroundColor3","Track");Round(bar,999);local fill=New("Frame",{BorderSizePixel=0,Size=UDim2.new(0,0,1,0),ZIndex=19,Parent=bar});bind(fill,"BackgroundColor3",ac);Round(fill,999);local knob=New("Frame",{AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(11,11),BorderSizePixel=0,ZIndex=20,Parent=bar});bind(knob,"BackgroundColor3",ac);Round(knob,999)
+  local drag=false;local item={};local function set(x,silent)v=math.clamp(tonumber(x)or v,min,max);if opts.Integer~=false then v=math.floor(v+.5)end;local alpha=(v-min)/(max-min);fill.Size=UDim2.new(alpha,0,1,0);knob.Position=UDim2.new(alpha,0,.5,0);val.Text=tostring(v)..tostring(opts.Suffix or"");if key then X:SetConfig(key,v,silent)end;if not silent and cb then task.spawn(cb,v)end end;local function pos(x)local a=math.clamp((x-bar.AbsolutePosition.X)/math.max(bar.AbsoluteSize.X,1),0,1);set(min+(max-min)*a,false)end
+  bar.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;pos(i.Position.X)end end);X.Connections[#X.Connections+1]=UserInputService.InputChanged:Connect(function(i)if drag and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then pos(i.Position.X)end end);X.Connections[#X.Connections+1]=UserInputService.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end end)
+  function item:Set(x,silent)set(x,silent)end;function item:Get()return v end;set(v,true);if key then X.Items[key]=item end;return item
+ end
+
+ function X:Input(parent,key,title,desc,default,cb,opts)
+  opts=opts or{};local r=row(parent,46);labels(r,title,desc,166);local box=New("TextBox",{AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-8,.5,0),Size=UDim2.fromOffset(140,28),BackgroundTransparency=.44,BorderSizePixel=0,ClearTextOnFocus=false,PlaceholderText=opts.Placeholder or"",Text=tostring(default or""),Font=Enum.Font.GothamMedium,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=19,Parent=r});bind(box,"BackgroundColor3","Panel3");bind(box,"TextColor3","A2");bind(box,"PlaceholderColor3","Dim");Round(box,7);New("UIPadding",{PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8),Parent=box})
+  local v=default;local item={};local function clean(x)if opts.Numeric then local n=tonumber(x);if not n then return v end;if opts.Min~=nil then n=math.max(n,opts.Min)end;if opts.Max~=nil then n=math.min(n,opts.Max)end;if opts.Integer then n=math.floor(n+.5)end;return n end;return tostring(x or"")end
+  function item:Set(x,silent)v=clean(x);box.Text=tostring(v or"");if key then X:SetConfig(key,v,silent)end;if not silent and cb then task.spawn(cb,v)end end;function item:Get()return v end;box.FocusLost:Connect(function()item:Set(box.Text,false)end);item:Set(v,true);if key then X.Items[key]=item end;return item
+ end
+
+ function X:Live(parent,title,value)local r=row(parent,40);local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,0),Size=UDim2.new(.52,-9,1,0),Font=Enum.Font.GothamMedium,Text=title,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(a,"TextColor3","Soft");local b=New("TextLabel",{BackgroundTransparency=1,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-9,0,0),Size=UDim2.new(.48,0,1,0),Font=Enum.Font.GothamMedium,Text=tostring(value or"--"),TextSize=9,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=18,Parent=r});bind(b,"TextColor3","A1");return b end
+ function X:Paragraph(parent,title,text)local r=row(parent,61);local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,5),Size=UDim2.new(1,-18,0,18),Font=Enum.Font.GothamMedium,Text=title,TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local b=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,24),Size=UDim2.new(1,-18,0,29),Font=Enum.Font.Gotham,Text=text,TextSize=9,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,ZIndex=18,Parent=r});bind(b,"TextColor3","Dim");return b end
+ function X:Progress(parent,title,value,opts)opts=opts or{};local r=row(parent,51);local ac=ak(opts.Accent);local mn=opts.Min or 0;local mx=opts.Max or 100;local v=value or mn;local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,3),Size=UDim2.new(1,-75,0,17),Font=Enum.Font.GothamMedium,Text=title,TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local vl=New("TextLabel",{BackgroundTransparency=1,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-9,0,3),Size=UDim2.fromOffset(60,17),Font=Enum.Font.GothamMedium,Text="",TextSize=9,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=18,Parent=r});bind(vl,"TextColor3",ac);local bar=New("Frame",{Position=UDim2.fromOffset(9,32),Size=UDim2.new(1,-18,0,7),BorderSizePixel=0,ZIndex=18,Parent=r});bind(bar,"BackgroundColor3","Track");Round(bar,999);local fill=New("Frame",{BorderSizePixel=0,Size=UDim2.new(0,0,1,0),ZIndex=19,Parent=bar});bind(fill,"BackgroundColor3",ac);Round(fill,999);local item={};function item:Set(x)v=math.clamp(tonumber(x)or v,mn,mx);local z=(v-mn)/(mx-mn);Tw(fill,.14,{Size=UDim2.new(z,0,1,0)});vl.Text=tostring(math.floor(z*100+.5)).."%"end;function item:Get()return v end;item:Set(v);return item end
+
+ function X:Notify(title,text,good)local t=New("Frame",{AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,-10,1,-10),Size=UDim2.fromOffset(245,62),BorderSizePixel=0,ZIndex=100,Parent=g});bind(t,"BackgroundColor3","Panel");shellGlass(t);Round(t,9);Stroke(t,good==false and T.Danger or T.A2,.42);local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,5),Size=UDim2.new(1,-18,0,18),Font=Enum.Font.GothamMedium,Text=title or"Serenity Hub",TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=101,Parent=t});bind(a,"TextColor3","Text");local b=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,24),Size=UDim2.new(1,-18,0,29),Font=Enum.Font.Gotham,Text=text or"",TextSize=9,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,ZIndex=101,Parent=t});bind(b,"TextColor3","Soft");t.Position=UDim2.new(1,260,1,-10);Tw(t,.16,{Position=UDim2.new(1,-10,1,-10)});task.delay(2.7,function()if t.Parent then Tw(t,.14,{Position=UDim2.new(1,260,1,-10)}).Completed:Wait();t:Destroy()end end)end
+
+ -- UNIVERSAL CARDS -----------------------------------------------------

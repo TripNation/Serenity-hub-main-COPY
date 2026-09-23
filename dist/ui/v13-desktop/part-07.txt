@@ -1,0 +1,491 @@
+                    local keyValue = tostring(optionValue)
+                    selected[keyValue] = not selected[keyValue]
+
+                    if not selected[keyValue] then
+                        selected[keyValue] = nil
+                    end
+
+                    refreshSummary()
+                    refreshOptions()
+                    emit()
+                end)
+            end
+
+            refreshSummary()
+            refreshOptions()
+        end
+
+        local function applySearch()
+            local query = string.lower(search.Text or "")
+
+            for optionValue, data in pairs(optionRows) do
+                data.Row.Visible =
+                    query == ""
+                    or string.find(
+                        string.lower(tostring(optionValue)),
+                        query,
+                        1,
+                        true
+                    ) ~= nil
+            end
+        end
+
+        search:GetPropertyChangedSignal("Text"):Connect(applySearch)
+
+        allButton.MouseButton1Click:Connect(function()
+            if not enabled then
+                return
+            end
+
+            for _, optionValue in ipairs(values) do
+                selected[tostring(optionValue)] = true
+            end
+
+            refreshSummary()
+            refreshOptions()
+            emit()
+        end)
+
+        clearButton.MouseButton1Click:Connect(function()
+            if not enabled then
+                return
+            end
+
+            table.clear(selected)
+            refreshSummary()
+            refreshOptions()
+            emit()
+        end)
+
+        function item:Open()
+            if open or not enabled then
+                return
+            end
+
+            closeOtherPicker(item)
+            Window._OpenPicker = item
+            open = true
+
+            menu.Visible = true
+            arrow.Text = "^"
+
+            local optionCount = math.clamp(#values,2,6)
+            local menuHeight = 51 + (optionCount * 35)
+
+            menu.Size = UDim2.new(1,-20,0,menuHeight)
+
+            Tween(row,.17,{
+                Size = UDim2.new(1,0,0,closedHeight + menuHeight + 10)
+            })
+
+            Tween(selectorStroke,.13,{
+                Color = accent,
+                Transparency = .38,
+            })
+
+            task.defer(function()
+                if search.Parent and options.AutoFocusSearch then
+                    search:CaptureFocus()
+                end
+            end)
+        end
+
+        function item:Close()
+            if not open then
+                return
+            end
+
+            open = false
+
+            if Window._OpenPicker == item then
+                Window._OpenPicker = nil
+            end
+
+            arrow.Text = "v"
+            search.Text = ""
+
+            Tween(row,.15,{
+                Size = UDim2.new(1,0,0,closedHeight)
+            })
+
+            Tween(selectorStroke,.13,{
+                Color = Theme.StrokeSoft,
+                Transparency = .72,
+            })
+
+            task.delay(.15,function()
+                if not open and menu.Parent then
+                    menu.Visible = false
+                end
+            end)
+        end
+
+        function item:Get()
+            return selectedList(values,selected)
+        end
+
+        function item:GetSet()
+            local result = {}
+            for keyValue, on in pairs(selected) do
+                if on then
+                    result[keyValue] = true
+                end
+            end
+            return result
+        end
+
+        function item:Set(newSelection,silent)
+            selected = makeSet(newSelection)
+
+            -- Remove values that are not in the current options.
+            local allowed = {}
+            for _, optionValue in ipairs(values) do
+                allowed[tostring(optionValue)] = true
+            end
+
+            for keyValue in pairs(selected) do
+                if not allowed[keyValue] then
+                    selected[keyValue] = nil
+                end
+            end
+
+            refreshSummary()
+            refreshOptions()
+
+            if not silent and callback then
+                task.spawn(
+                    callback,
+                    selectedList(values,selected),
+                    selected
+                )
+            end
+        end
+
+        function item:Clear(silent)
+            item:Set({},silent)
+        end
+
+        function item:SelectAll(silent)
+            local all = {}
+            for _, optionValue in ipairs(values) do
+                all[#all + 1] = optionValue
+            end
+            item:Set(all,silent)
+        end
+
+        function item:SetEnabled(newEnabled)
+            enabled = newEnabled ~= false
+            selector.BackgroundTransparency = enabled and .47 or .78
+            summary.TextTransparency = enabled and 0 or .50
+
+            if not enabled then
+                item:Close()
+            end
+        end
+
+        function item:SetOptions(newValues,preserve)
+            local previous = item:GetSet()
+            values = copyArray(newValues)
+
+            if preserve then
+                selected = previous
+            else
+                selected = {}
+            end
+
+            -- Remove invalid selections.
+            local allowed = {}
+            for _, optionValue in ipairs(values) do
+                allowed[tostring(optionValue)] = true
+            end
+
+            for keyValue in pairs(selected) do
+                if not allowed[keyValue] then
+                    selected[keyValue] = nil
+                end
+            end
+
+            rebuild()
+            applySearch()
+        end
+
+        Overlay(selector,function()
+            if open then
+                item:Close()
+            else
+                item:Open()
+            end
+        end,30)
+
+        rebuild()
+        Window.Items[key] = item
+        return item
+    end
+
+    function Window:Input(parent, key, title, description, default, callback, options)
+        options = options or {}
+        local row = baseRow(parent,60)
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,7),
+            Size = UDim2.new(.46,-18,0,20),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = Theme.Text,
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,28),
+            Size = UDim2.new(.46,-18,0,18),
+            Font = Enum.Font.Gotham,
+            Text = tostring(description or ""),
+            TextColor3 = Theme.TextDim,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        local box = New("TextBox", {
+            AnchorPoint = Vector2.new(1,0),
+            Position = UDim2.new(1,-12,0,12),
+            Size = UDim2.new(.50,0,0,36),
+            BackgroundColor3 = Theme.Panel3,
+            BackgroundTransparency = .47,
+            BorderSizePixel = 0,
+            ClearTextOnFocus = false,
+            PlaceholderText = tostring(options.Placeholder or ""),
+            PlaceholderColor3 = Theme.TextDim,
+            Text = tostring(default or ""),
+            TextColor3 = Theme.Cyan,
+            TextSize = 10,
+            Font = Enum.Font.GothamMedium,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(box,9)
+        Stroke(box,Theme.StrokeSoft,.72,1)
+
+        New("UIPadding", {
+            PaddingLeft = UDim.new(0,10),
+            PaddingRight = UDim.new(0,10),
+            Parent = box,
+        })
+
+        local item = {}
+        local value = default
+
+        local function sanitize(raw)
+            if options.Numeric then
+                local number = tonumber(raw)
+                if number == nil then
+                    return value
+                end
+
+                if options.Min ~= nil then
+                    number = math.max(tonumber(options.Min) or number,number)
+                end
+
+                if options.Max ~= nil then
+                    number = math.min(tonumber(options.Max) or number,number)
+                end
+
+                if options.Integer then
+                    number = math.floor(number + .5)
+                end
+
+                return number
+            end
+
+            return tostring(raw or "")
+        end
+
+        function item:Set(newValue,silent)
+            value = sanitize(newValue)
+            box.Text = tostring(value or "")
+
+            if not silent and callback then
+                task.spawn(callback,value)
+            end
+        end
+
+        function item:Get()
+            return value
+        end
+
+        box.FocusLost:Connect(function(enterPressed)
+            item:Set(box.Text,false)
+        end)
+
+        Window.Items[key] = item
+        return item
+    end
+
+
+
+    function Window:Progress(parent, key, title, description, value, options)
+        options = options or {}
+
+        local row = baseRow(parent,68)
+        local accent = resolveAccent(options.Accent or "cyan")
+        local minimum = tonumber(options.Min) or 0
+        local maximum = tonumber(options.Max) or 100
+
+        if maximum <= minimum then
+            maximum = minimum + 1
+        end
+
+        local current = math.clamp(tonumber(value) or minimum,minimum,maximum)
+
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(12,6),
+            Size = UDim2.new(1,-96,0,20),
+            Font = Enum.Font.GothamMedium,
+            Text = tostring(title or ""),
+            TextColor3 = Theme.Text,
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        if description and description ~= "" then
+            New("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(12,25),
+                Size = UDim2.new(1,-96,0,16),
+                Font = Enum.Font.Gotham,
+                Text = tostring(description),
+                TextColor3 = Theme.TextDim,
+                TextSize = 8,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ZIndex = 18,
+                Parent = row,
+            })
+        end
+
+        local valueLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            AnchorPoint = Vector2.new(1,0),
+            Position = UDim2.new(1,-12,0,7),
+            Size = UDim2.fromOffset(76,18),
+            Font = Enum.Font.GothamBold,
+            Text = "",
+            TextColor3 = accent,
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Right,
+            ZIndex = 18,
+            Parent = row,
+        })
+
+        local bar = New("Frame", {
+            Position = UDim2.fromOffset(12,50),
+            Size = UDim2.new(1,-24,0,7),
+            BackgroundColor3 = Theme.Track,
+            BackgroundTransparency = .18,
+            BorderSizePixel = 0,
+            ZIndex = 18,
+            Parent = row,
+        })
+        Round(bar,999)
+
+        local fill = New("Frame", {
+            BackgroundColor3 = accent,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0,0,1,0),
+            ZIndex = 19,
+            Parent = bar,
+        })
+        Round(fill,999)
+
+        local item = {}
+
+        local function formatValue(v)
+            if type(options.Format) == "function" then
+                local ok, result = pcall(options.Format,v,minimum,maximum)
+                if ok then
+                    return tostring(result)
+                end
+            end
+
+            if options.Percent ~= false then
+                local alpha = (v-minimum)/(maximum-minimum)
+                return tostring(math.floor(alpha*100 + .5)) .. "%"
+            end
+
+            return tostring(math.floor(v + .5)) .. tostring(options.Suffix or "")
+        end
+
+        function item:Set(newValue)
+            current = math.clamp(
+                tonumber(newValue) or current,
+                minimum,
+                maximum
+            )
+
+            local alpha = (current-minimum)/(maximum-minimum)
+
+            Tween(fill,.16,{
+                Size = UDim2.new(alpha,0,1,0)
+            })
+
+            valueLabel.Text = formatValue(current)
+        end
+
+        function item:Get()
+            return current
+        end
+
+        item:Set(current)
+
+        if key then
+            Window.Items[key] = item
+        end
+
+        return item
+    end
+
+    function Window:Hero(parent, kicker, title, description, accentName)
+        local row = baseRow(parent,112)
+        local color = accentName == "mint"
+            and Theme.Mint
+            or accentName == "lavender"
+            and Theme.Lavender
+            or Theme.Cyan
+
+        local line = New("Frame", {
+            BackgroundColor3=color,
+            BorderSizePixel=0,
+            Position=UDim2.fromOffset(0,0),
+            Size=UDim2.new(0,3,1,0),
+            ZIndex=17,
+            Parent=row
+        })
+        Round(line,999)
+
+        New("TextLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(14,10),
+            Size=UDim2.new(1,-28,0,18),
+            Font=Enum.Font.GothamBold,
+            Text=kicker or "",
+            TextColor3=color,
+            TextSize=10,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            ZIndex=17,
+            Parent=row
+        })
+
+        New("TextLabel", {
+            BackgroundTransparency=1,
+            Position=UDim2.fromOffset(14,31),

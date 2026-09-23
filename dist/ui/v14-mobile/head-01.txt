@@ -1,0 +1,42 @@
+-- SERENITY HUB // OFFICIAL V14 MOBILE RENDERER // ARCHITECTURE V3
+-- Standalone preview only. Does not update GitHub.
+
+local Players=game:GetService("Players")
+local TweenService=game:GetService("TweenService")
+local UserInputService=game:GetService("UserInputService")
+local RunService=game:GetService("RunService")
+local MarketplaceService=game:GetService("MarketplaceService")
+local TeleportService=game:GetService("TeleportService")
+local HttpService=game:GetService("HttpService")
+local Lighting=game:GetService("Lighting")
+local CoreGui=game:GetService("CoreGui")
+local VirtualUser=game:GetService("VirtualUser")
+
+local LP=Players.LocalPlayer or Players.PlayerAdded:Wait()
+local ENV=(getgenv and getgenv()) or _G
+-- Official runtime ownership is handled by core/runtime.lua
+
+local LOGO="rbxthumb://type=Asset&id=89023606689629&w=420&h=420"
+local DISCORD="https://discord.gg/ccsvkN7Pp"
+
+local Icons={
+ Dashboard="rbxassetid://10723424646",
+ Farm="rbxassetid://10723425539",
+ Pets="rbxassetid://10734950309",
+ Selling="rbxassetid://10734963191",
+ Movement="rbxassetid://10734950309",
+ Utilities="rbxassetid://10734950309",
+ Progress="rbxassetid://10709782582",
+ Components="rbxassetid://10709782582",
+ Misc="rbxassetid://10734950309",
+ Settings="rbxassetid://14007344336",
+ Search="rbxassetid://10734943674",
+ ["Settings UI"]="rbxassetid://10734950309",
+}
+
+local Presets={
+Serenity={BG=Color3.fromRGB(8,15,18),Side=Color3.fromRGB(9,18,20),Top=Color3.fromRGB(8,16,20),Panel=Color3.fromRGB(20,30,31),Panel2=Color3.fromRGB(27,38,39),Panel3=Color3.fromRGB(34,46,47),Stroke=Color3.fromRGB(62,83,84),Text=Color3.fromRGB(244,248,248),Soft=Color3.fromRGB(201,212,212),Dim=Color3.fromRGB(141,157,157),A1=Color3.fromRGB(56,225,177),A2=Color3.fromRGB(38,205,234),A3=Color3.fromRGB(166,126,255),Warn=Color3.fromRGB(242,201,74),Danger=Color3.fromRGB(237,104,120),Track=Color3.fromRGB(65,77,79)},
+Darker={BG=Color3.fromRGB(4,6,8),Side=Color3.fromRGB(7,9,11),Top=Color3.fromRGB(6,8,10),Panel=Color3.fromRGB(14,17,20),Panel2=Color3.fromRGB(20,23,27),Panel3=Color3.fromRGB(27,31,35),Stroke=Color3.fromRGB(55,61,67),Text=Color3.fromRGB(245,247,249),Soft=Color3.fromRGB(197,203,209),Dim=Color3.fromRGB(130,139,148),A1=Color3.fromRGB(76,219,182),A2=Color3.fromRGB(76,169,239),A3=Color3.fromRGB(158,126,255),Warn=Color3.fromRGB(240,197,76),Danger=Color3.fromRGB(235,99,113),Track=Color3.fromRGB(51,57,63)},
+Midnight={BG=Color3.fromRGB(8,11,25),Side=Color3.fromRGB(11,15,31),Top=Color3.fromRGB(10,14,29),Panel=Color3.fromRGB(21,27,49),Panel2=Color3.fromRGB(29,35,61),Panel3=Color3.fromRGB(37,44,73),Stroke=Color3.fromRGB(72,83,124),Text=Color3.fromRGB(244,246,255),Soft=Color3.fromRGB(204,211,235),Dim=Color3.fromRGB(142,151,184),A1=Color3.fromRGB(91,171,255),A2=Color3.fromRGB(104,226,236),A3=Color3.fromRGB(174,125,255),Warn=Color3.fromRGB(247,203,86),Danger=Color3.fromRGB(242,103,132),Track=Color3.fromRGB(58,67,94)},
+Dark={BG=Color3.fromRGB(15,15,16),Side=Color3.fromRGB(20,20,21),Top=Color3.fromRGB(18,18,19),Panel=Color3.fromRGB(29,29,31),Panel2=Color3.fromRGB(37,37,40),Panel3=Color3.fromRGB(47,47,51),Stroke=Color3.fromRGB(78,78,84),Text=Color3.fromRGB(247,247,248),Soft=Color3.fromRGB(211,211,215),Dim=Color3.fromRGB(151,151,158),A1=Color3.fromRGB(196,201,208),A2=Color3.fromRGB(130,186,230),A3=Color3.fromRGB(180,147,229),Warn=Color3.fromRGB(236,196,84),Danger=Color3.fromRGB(229,104,115),Track=Color3.fromRGB(66,66,71)},
+Green={BG=Color3.fromRGB(8,24,13),Side=Color3.fromRGB(10,31,17),Top=Color3.fromRGB(8,27,14),Panel=Color3.fromRGB(19,49,27),Panel2=Color3.fromRGB(27,62,35),Panel3=Color3.fromRGB(35,76,45),Stroke=Color3.fromRGB(62,111,73),Text=Color3.fromRGB(241,250,243),Soft=Color3.fromRGB(198,224,203),Dim=Color3.fromRGB(132,172,142),A1=Color3.fromRGB(71,232,125),A2=Color3.fromRGB(72,220,191),A3=Color3.fromRGB(177,151,255),Warn=Color3.fromRGB(241,200,76),Danger=Color3.fromRGB(239,106,116),Track=Color3.fromRGB(48,86,57)},

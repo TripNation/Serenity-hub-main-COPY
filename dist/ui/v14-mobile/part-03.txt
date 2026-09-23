@@ -1,0 +1,353 @@
+   d.Stroke.Transparency=active and .28 or .82
+  end
+  page.CanvasPosition=Vector2.new(page.CanvasPosition.X,page.CanvasPosition.Y)
+ end
+
+ -- FEATURE ACCORDION ---------------------------------------------------
+ local featureOrder=0
+ function X:Feature(page,title,desc,opts)
+  opts=opts or{};featureOrder+=1
+  local accent=ak(opts.Accent)
+  local opened=opts.Expanded==true
+
+  local f=New("Frame",{
+   LayoutOrder=opts.Order or featureOrder,
+   BackgroundTransparency=.52,
+   BorderSizePixel=0,
+   Size=UDim2.new(1,0,0,0),
+   AutomaticSize=Enum.AutomaticSize.Y,
+   ClipsDescendants=true,
+   ZIndex=15,
+   Parent=page
+  })
+  bind(f,"BackgroundColor3","Panel")
+  featureGlass(f)
+  Round(f,11)
+
+  local fs=Stroke(f,T.Stroke,.70)
+  bind(fs,"Color","Stroke")
+
+  New("UIListLayout",{
+   Padding=UDim.new(0,0),
+   SortOrder=Enum.SortOrder.LayoutOrder,
+   Parent=f
+  })
+
+  local h=New("TextButton",{
+   AutoButtonColor=false,
+   BackgroundTransparency=1,
+   BorderSizePixel=0,
+   Size=UDim2.new(1,0,0,50),
+   LayoutOrder=1,
+   Text="",
+   ZIndex=16,
+   Parent=f
+  })
+
+  -- V14.3:
+  -- NO large colored block behind the header.
+  -- Serenity keeps only the thin accent rail + tiny accent dot.
+  local rail=New("Frame",{
+   BorderSizePixel=0,
+   Position=UDim2.fromOffset(0,8),
+   Size=UDim2.fromOffset(3,34),
+   ZIndex=17,
+   Parent=h
+  })
+  bind(rail,"BackgroundColor3",accent)
+  Round(rail,999)
+
+  local dot=New("Frame",{
+   BorderSizePixel=0,
+   Position=UDim2.fromOffset(12,13),
+   Size=UDim2.fromOffset(6,6),
+   ZIndex=17,
+   Parent=h
+  })
+  bind(dot,"BackgroundColor3",accent)
+  Round(dot,999)
+
+  local titleLabel=New("TextLabel",{
+   BackgroundTransparency=1,
+   Position=UDim2.fromOffset(25,5),
+   Size=UDim2.new(1,-90,0,20),
+   Font=Enum.Font.GothamMedium,
+   Text=title,
+   TextSize=12,
+   TextXAlignment=Enum.TextXAlignment.Left,
+   ZIndex=17,
+   Parent=h
+  })
+  bind(titleLabel,"TextColor3","Text")
+
+  local descriptionLabel=New("TextLabel",{
+   BackgroundTransparency=1,
+   Position=UDim2.fromOffset(25,26),
+   Size=UDim2.new(1,-90,0,16),
+   Font=Enum.Font.Gotham,
+   Text=desc or"",
+   TextSize=9,
+   TextXAlignment=Enum.TextXAlignment.Left,
+   TextTruncate=Enum.TextTruncate.AtEnd,
+   ZIndex=17,
+   Parent=h
+  })
+  bind(descriptionLabel,"TextColor3","Dim")
+
+  -- Neutral Serenity pill. Accent is used only for border/text.
+  local statePill=New("Frame",{
+   AnchorPoint=Vector2.new(1,.5),
+   Position=UDim2.new(1,-34,.5,0),
+   Size=UDim2.fromOffset(42,20),
+   BackgroundTransparency=.50,
+   BorderSizePixel=0,
+   ZIndex=17,
+   Parent=h
+  })
+  bind(statePill,"BackgroundColor3","Panel3")
+  Round(statePill,999)
+
+  local stateStroke=Stroke(statePill,T[accent],.64)
+  bind(stateStroke,"Color",accent)
+
+  local stateText=New("TextLabel",{
+   BackgroundTransparency=1,
+   Size=UDim2.fromScale(1,1),
+   Font=Enum.Font.GothamBold,
+   Text=opened and"OPEN"or"VIEW",
+   TextSize=8,
+   ZIndex=18,
+   Parent=statePill
+  })
+  bind(stateText,"TextColor3",accent)
+
+  local arrow=New("TextLabel",{
+   BackgroundTransparency=1,
+   AnchorPoint=Vector2.new(1,.5),
+   Position=UDim2.new(1,-8,.5,0),
+   Size=UDim2.fromOffset(18,18),
+   Font=Enum.Font.GothamBold,
+   Text=opened and"v"or">",
+   TextSize=11,
+   ZIndex=17,
+   Parent=h
+  })
+  bind(arrow,"TextColor3","Soft")
+
+  -- Very thin neutral divider, closer to V13's visual hierarchy.
+  local divider=New("Frame",{
+   BackgroundTransparency=opened and .72 or 1,
+   BorderSizePixel=0,
+   Position=UDim2.new(0,12,1,-1),
+   Size=UDim2.new(1,-24,0,1),
+   ZIndex=17,
+   Parent=h
+  })
+  bind(divider,"BackgroundColor3","Stroke")
+
+  local c=New("Frame",{
+   BackgroundTransparency=1,
+   Size=UDim2.new(1,0,0,0),
+   AutomaticSize=Enum.AutomaticSize.Y,
+   Visible=opened,
+   LayoutOrder=2,
+   ZIndex=16,
+   Parent=f
+  })
+
+  New("UIPadding",{
+   PaddingLeft=UDim.new(0,8),
+   PaddingRight=UDim.new(0,8),
+   PaddingBottom=UDim.new(0,8),
+   Parent=c
+  })
+
+  New("UIListLayout",{
+   Padding=UDim.new(0,6),
+   SortOrder=Enum.SortOrder.LayoutOrder,
+   Parent=c
+  })
+
+  local id=tostring(featureOrder)
+  local item={
+   Frame=f,
+   Content=c,
+   Expanded=opened,
+   Page=page,
+   Id=id
+  }
+
+  local function render()
+   c.Visible=item.Expanded
+   arrow.Text=item.Expanded and"v"or">"
+   stateText.Text=item.Expanded and"OPEN"or"VIEW"
+
+   fs.Transparency=item.Expanded and .36 or .70
+   stateStroke.Transparency=item.Expanded and .40 or .64
+   divider.BackgroundTransparency=item.Expanded and .72 or 1
+
+   local configured=math.clamp(
+    tonumber(C.FeatureTransparency) or 48,
+    28,
+    78
+   )/100
+
+   local target=item.Expanded
+    and math.max(.34,configured-.05)
+    or configured
+
+   Tw(f,.13,{BackgroundTransparency=target})
+   Tw(statePill,.13,{
+    BackgroundTransparency=item.Expanded and .38 or .50
+   })
+  end
+
+  function item:Open()
+   if item.Expanded then
+    return
+   end
+
+   X:CloseActivePopup()
+
+   if not page:GetAttribute("AllowMultipleFeatures")then
+    local old=page:GetAttribute("OpenFeatureId")
+
+    if old and X.Features[old]and X.Features[old]~=item then
+     X.Features[old]:Close()
+    end
+   end
+
+   item.Expanded=true
+   page:SetAttribute("OpenFeatureId",id)
+   render()
+  end
+
+  function item:Close()
+   if not item.Expanded then
+    return
+   end
+
+   X:CloseActivePopup()
+   item.Expanded=false
+   render()
+  end
+
+  function item:Toggle()
+   if item.Expanded then
+    item:Close()
+   else
+    item:Open()
+   end
+  end
+
+  h.MouseButton1Click:Connect(function()
+   item:Toggle()
+  end)
+
+  h.MouseEnter:Connect(function()
+   Tw(fs,.10,{
+    Transparency=item.Expanded and .24 or .54
+   })
+   Tw(stateStroke,.10,{
+    Transparency=item.Expanded and .28 or .50
+   })
+  end)
+
+  h.MouseLeave:Connect(function()
+   render()
+  end)
+
+  X.Features[id]=item
+
+  if opened then
+   page:SetAttribute("OpenFeatureId",id)
+  end
+
+  render()
+  return c,item
+ end
+
+ -- CONTROL HELPERS -----------------------------------------------------
+ local controlOrder=0
+ local function row(parent,height)
+  controlOrder+=1
+  local r=New("Frame",{
+   LayoutOrder=controlOrder,
+   BackgroundTransparency=.34,
+   BorderSizePixel=0,
+   Size=UDim2.new(1,0,0,height or 48),
+   ZIndex=17,
+   Parent=parent
+  })
+  bind(r,"BackgroundColor3","Panel2")
+  controlGlass(r)
+  Round(r,9)
+
+  local s=Stroke(r,T.Stroke,.82)
+  bind(s,"Color","Stroke")
+
+  r.MouseEnter:Connect(function()
+   Tw(r,.10,{BackgroundTransparency=math.max(.18,(tonumber(C.ControlTransparency)or 34)/100-.08)})
+   Tw(s,.10,{Transparency=.62})
+  end)
+
+  r.MouseLeave:Connect(function()
+   Tw(r,.10,{BackgroundTransparency=math.clamp((tonumber(C.ControlTransparency)or 34)/100,.18,.62)})
+   Tw(s,.10,{Transparency=.82})
+  end)
+
+  return r
+ end
+ local function labels(r,t,d,space)local a=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,4),Size=UDim2.new(1,-(space or 90),0,18),Font=Enum.Font.GothamMedium,Text=t or"",TextSize=11,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=18,Parent=r});bind(a,"TextColor3","Text");local b=New("TextLabel",{BackgroundTransparency=1,Position=UDim2.fromOffset(9,22),Size=UDim2.new(1,-(space or 90),0,15),Font=Enum.Font.Gotham,Text=d or"",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=18,Parent=r});bind(b,"TextColor3","Dim");return a,b end
+
+ function X:Action(parent,title,desc,cb,opts)
+  opts=opts or{};local r=row(parent,46);local ac=ak(opts.Accent);labels(r,title,desc,105);local b=New("TextButton",{AutoButtonColor=false,AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-8,.5,0),Size=UDim2.fromOffset(opts.Width or 76,27),BackgroundTransparency=.66,BorderSizePixel=0,Font=Enum.Font.GothamMedium,Text=opts.ButtonText or"RUN",TextSize=9,ZIndex=19,Parent=r});bind(b,"BackgroundColor3",ac);bind(b,"TextColor3",ac);Round(b,7);local st=Stroke(b,T[ac],.5);bind(st,"Color",ac)
+  local armed=false;local serial=0;b.MouseButton1Click:Connect(function()if opts.Confirm and not armed then armed=true;serial+=1;local x=serial;b.Text=opts.ConfirmText or"AGAIN";task.delay(opts.ConfirmTimeout or 2.2,function()if armed and serial==x and b.Parent then armed=false;b.Text=opts.ButtonText or"RUN"end end);return end;armed=false;serial+=1;b.Text=opts.ButtonText or"RUN";if cb then task.spawn(cb)end end);return{Row=r,Button=b}
+ end
+
+ function X:Switch(parent,key,title,desc,default,cb,opts)
+  opts=opts or{};local r=row(parent,46);local ac=ak(opts.Accent);local state=default==true;labels(r,title,desc,72)
+  local tr=New("TextButton",{AutoButtonColor=false,AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-9,.5,0),Size=UDim2.fromOffset(40,22),BorderSizePixel=0,Text="",ZIndex=19,Parent=r});Round(tr,999)
+  local k=New("Frame",{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(0,11,.5,0),Size=UDim2.fromOffset(16,16),BorderSizePixel=0,ZIndex=20,Parent=tr});Round(k,999)
+  local item={};local function render()tr.BackgroundColor3=state and T[ac]or T.Track;k.BackgroundColor3=state and T.Text or T.Dim;Tw(k,.11,{Position=state and UDim2.new(1,-11,.5,0)or UDim2.new(0,11,.5,0)})end
+  function item:Set(v,silent)state=v==true;render();if key then X:SetConfig(key,state,silent)end;if not silent and cb then task.spawn(cb,state)end end;function item:Get()return state end;X.ThemeRefreshers[#X.ThemeRefreshers+1]=render;tr.MouseButton1Click:Connect(function()item:Set(not state,false)end);item:Set(state,true);if key then X.Items[key]=item end;return item
+ end
+
+ function X:Select(parent,key,title,desc,values,default,cb,opts)
+  opts=opts or{};values=CopyArray(values);local holder=New("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,Parent=parent});New("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=holder});local r=row(holder,46);r.LayoutOrder=1;local value=default or values[1];local ac=ak(opts.Accent);labels(r,title,desc,166)
+  local sel=New("TextButton",{AutoButtonColor=false,AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-8,.5,0),Size=UDim2.fromOffset(140,28),BackgroundTransparency=.44,BorderSizePixel=0,Font=Enum.Font.GothamMedium,Text=tostring(value or"Select"),TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=19,Parent=r});bind(sel,"BackgroundColor3","Panel3");bind(sel,"TextColor3",ac);Round(sel,7);New("UIPadding",{PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8),Parent=sel})
+  local menu=New("Frame",{LayoutOrder=2,BackgroundTransparency=.12,BorderSizePixel=0,Size=UDim2.new(1,0,0,0),Visible=false,ClipsDescendants=true,ZIndex=20,Parent=holder});bind(menu,"BackgroundColor3","Panel2");Round(menu,8);local ms=Stroke(menu,T[ac],.55);bind(ms,"Color",ac)
+  local list=New("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(4,4),Size=UDim2.new(1,-8,1,-8),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=2,ZIndex=21,Parent=menu});bind(list,"ScrollBarImageColor3",ac);New("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=list})
+  local open=false;local item={_Selector=sel,_Menu=menu}
+  local function rebuild()for _,o in ipairs(list:GetChildren())do if o:IsA("TextButton")then o:Destroy()end end;for i,v in ipairs(values)do local o=New("TextButton",{AutoButtonColor=false,BackgroundTransparency=tostring(v)==tostring(value)and .38 or .78,BorderSizePixel=0,Size=UDim2.new(1,-2,0,28),LayoutOrder=i,Font=Enum.Font.GothamMedium,Text="  "..tostring(v),TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=22,Parent=list});bind(o,"BackgroundColor3","Panel3");bind(o,"TextColor3","Soft");Round(o,6);o.MouseButton1Click:Connect(function()item:Set(v,false);item:Close()end)end end
+  function item:Open()
+   if open then return end
+   X:ActivatePopup(item)
+   open=true
+   menu.Visible=true
+   menu.Size=UDim2.new(1,0,0,math.min(#values,6)*31+8)
+  end
+
+  function item:Close(fromManager)
+   if not open then
+    if not fromManager then X:DeactivatePopup(item)end
+    return
+   end
+
+   open=false
+   menu.Visible=false
+   menu.Size=UDim2.new(1,0,0,0)
+
+   if not fromManager then
+    X:DeactivatePopup(item)
+   elseif X.ActivePopup==item then
+    X.ActivePopup=nil
+   end
+  end
+  function item:Set(v,silent)local good=false;for _,x in ipairs(values)do if tostring(x)==tostring(v)then v=x;good=true;break end end;if not good then return false end;value=v;sel.Text=tostring(v);rebuild();if key then X:SetConfig(key,v,silent)end;if not silent and cb then task.spawn(cb,v)end;return true end;function item:Get()return value end
+  sel.MouseButton1Click:Connect(function()if open then item:Close()else item:Open()end end);rebuild();if key then X.Items[key]=item end;return item
+ end
+
+ function X:MultiSelect(parent,key,title,desc,values,defaults,cb,opts)
+  opts=opts or{};values=CopyArray(values);local holder=New("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,Parent=parent});New("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=holder});local r=row(holder,46);r.LayoutOrder=1;local selected=SelectionSet(defaults);local ac=ak(opts.Accent);labels(r,title,desc,166)
+  local sel=New("TextButton",{AutoButtonColor=false,AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-8,.5,0),Size=UDim2.fromOffset(140,28),BackgroundTransparency=.44,BorderSizePixel=0,Font=Enum.Font.GothamMedium,Text="",TextSize=9,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=19,Parent=r});bind(sel,"BackgroundColor3","Panel3");bind(sel,"TextColor3",ac);Round(sel,7);New("UIPadding",{PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8),Parent=sel})
